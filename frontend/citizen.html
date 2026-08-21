@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citizen Dashboard &bull; Pakistan Flood & Disaster Intelligence</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Toast Notification Styles */
+        #toastContainer {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: var(--card-bg, #0f172a);
+            border: 1px solid var(--border-glass, rgba(255,255,255,0.1));
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease forwards;
+            min-width: 280px;
+        }
+        .toast.success { border-left: 4px solid var(--accent-emerald, #34d399); }
+        .toast.error { border-left: 4px solid var(--accent-rose, #fb7185); }
+        .toast.info { border-left: 4px solid var(--accent-cyan, #22d3ee); }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Citizen Dashboard Layout Enhancements */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 25px;
+        }
+
+        .dashboard-sidebar {
+            background: var(--card-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 25px 20px;
+            height: fit-content;
+            backdrop-filter: blur(12px);
+        }
+
+        .user-profile-box {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-glass);
+            margin-bottom: 20px;
+        }
+
+        .user-avatar {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+            color: #070a13;
+            font-size: 1.8rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 auto 12px auto;
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-menu button {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 12px 16px;
+            text-align: left;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .sidebar-menu button:hover, .sidebar-menu button.active {
+            background: rgba(34, 211, 238, 0.12);
+            color: var(--accent-cyan);
+        }
+
+        .dashboard-content {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .dash-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 30px;
+            backdrop-filter: blur(12px);
+        }
+
+        .dash-card h3 {
+            font-size: 1.3rem;
+            color: #ffffff;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dash-card p.section-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+        }
+
+        /* Form Grid Controls */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .priority-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+        }
+
+        .priority-pill {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-glass);
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-muted);
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .priority-pill input {
+            display: none;
+        }
+
+        .priority-pill.low:hover, .priority-pill.low.selected {
+            border-color: var(--accent-emerald);
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--accent-emerald);
+        }
+
+        .priority-pill.medium:hover, .priority-pill.medium.selected {
+            border-color: var(--accent-amber);
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--accent-amber);
+        }
+
+        .priority-pill.high:hover, .priority-pill.high.selected {
+            border-color: var(--accent-rose);
+            background: rgba(251, 113, 133, 0.15);
+            color: var(--accent-rose);
+        }
+
+        /* Tables for Records */
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .records-table th, .records-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-glass);
+            font-size: 0.88rem;
+        }
+
+        .records-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .records-table td {
+            color: var(--text-main);
+        }
+
+        .badge-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-pending { background: rgba(251, 191, 36, 0.15); color: var(--accent-amber); border: 1px solid rgba(251, 191, 36, 0.3); }
+        .status-verified { background: rgba(34, 211, 238, 0.15); color: var(--accent-cyan); border: 1px solid rgba(34, 211, 238, 0.3); }
+        .status-resolved { background: rgba(52, 211, 153, 0.15); color: var(--accent-emerald); border: 1px solid rgba(52, 211, 153, 0.3); }
+
+        @media(max-width: 900px) {
+            .dashboard-container { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Header Navbar -->
+    <header>
+        <div class="logo-section">
+            <div class="logo-box">FDIP</div>
+            <div class="logo-text">
+                <h1>Pakistan Flood & Disaster Intelligence</h1>
+                <p>Citizen Portal Dashboard</p>
+            </div>
+        </div>
+        
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="map.html">GIS Map</a>
+            <a href="alerts.html">Alerts</a>
+            <a href="citizen.html" class="active">Citizen Dashboard</a>
+        </div>
+
+        <div class="auth-btn-group">
+            <button class="btn-auth btn-login" onclick="logoutSession()">Sign Out</button>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="dashboard-sidebar">
+            <div class="user-profile-box">
+                <div class="user-avatar" id="sidebarAvatar">AZ</div>
+                <h4 id="sidebarUserName" style="color: #fff; font-size: 1rem; margin-bottom: 4px;">Loading...</h4>
+                <p id="sidebarUserEmail" style="font-size: 0.75rem; color: var(--accent-cyan);">Verified Citizen</p>
+            </div>
+            
+            <div class="sidebar-menu">
+                <button class="active" onclick="switchTab('report-section', this)"><i class="fa-solid fa-bullhorn"></i> Submit New Report</button>
+                <button onclick="switchTab('records-section', this)"><i class="fa-solid fa-clock-rotate-left"></i> My Incident Records</button>
+                <button onclick="switchTab('advisories-section', this)"><i class="fa-solid fa-shield-heart"></i> Safety Guidelines</button>
+            </div>
+        </aside>
+
+        <!-- Dynamic Content Area -->
+        <main class="dashboard-content">
+            
+            <!-- SECTION 1: Report Submission Form -->
+            <div id="report-section" class="dash-card">
+                <h3><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-cyan);"></i> Emergency Incident & Damage Submission</h3>
+                <p class="section-desc">Report live urban flooding, river swells, road blockages, or structural damage with priority flags for rapid national emergency team routing.</p>
+                
+                <form id="citizenReportForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Incident / Hazard Category</label>
+                            <select id="reportCategory" required>
+                                <option value="">Select Category...</option>
+                                <option>Riverine / Urban Flash Flooding</option>
+                                <option>Landslide & Mountain Road Blockage</option>
+                                <option>Seismic Tremor / Structural Crack</option>
+                                <option>Severe Storm / Wind Damage</option>
+                                <option>Agricultural Waterlogging / Crop Loss</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Target Province / District</label>
+                            <input type="text" id="reportDistrict" placeholder="e.g. Swat, Nowshera, Lahore, Karachi" required>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>Exact Location / GPS Coordinates Reference</label>
+                            <input type="text" id="reportLocation" placeholder="e.g. Near Main GT Road Bridge, Village Chowk" required>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>Incident Priority Level</label>
+                            <div class="priority-options">
+                                <label class="priority-pill low selected" onclick="setPriority(this, 'Low')">
+                                    <input type="radio" name="priority" value="Low" checked> Low (Minor Risk)
+                                </label>
+                                <label class="priority-pill medium" onclick="setPriority(this, 'Medium')">
+                                    <input type="radio" name="priority" value="Medium"> Medium (Moderate Threat)
+                                </label>
+                                <label class="priority-pill high" onclick="setPriority(this, 'High')">
+                                    <input type="radio" name="priority" value="High"> High / Critical (Immediate Rescue)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>Detailed Description & Field Notes</label>
+                            <textarea id="reportDescription" rows="4" placeholder="Describe water depth levels, affected population count, or infrastructure status..." required></textarea>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>Attach Field Photo / Evidence (Optional)</label>
+                            <input type="file" accept="image/*" style="padding: 8px;">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-main btn-cyan" style="width: 100%; justify-content: center; margin-top: 15px;">
+                        <i class="fa-solid fa-paper-plane"></i> Transmit Report to National Command
+                    </button>
+                </form>
+            </div>
+
+            <!-- SECTION 2: My Incident Records -->
+            <div id="records-section" class="dash-card" style="display: none;">
+                <h3><i class="fa-solid fa-list-check" style="color: var(--accent-amber);"></i> My Submitted Disaster Reports</h3>
+                <p class="section-desc">Track real-time verification status, priority assignments, and staff review actions for all your submitted tickets.</p>
+                
+                <div style="overflow-x: auto;">
+                    <table class="records-table" id="myRecordsTable">
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>Category</th>
+                                <th>Location</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Submitted Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECTION 3: Safety Advisories -->
+            <div id="advisories-section" class="dash-card" style="display: none;">
+                <h3><i class="fa-solid fa-shield-heart" style="color: var(--accent-emerald);"></i> National Emergency Guidelines</h3>
+                <p class="section-desc">Essential safety protocols issued by the National Disaster Management Grid.</p>
+                <div style="display: grid; gap: 15px;">
+                    <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; border-left: 4px solid var(--accent-cyan);">
+                        <h4 style="color: #fff; margin-bottom: 6px;">Flash Flood Evacuation Rule</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Move immediately to higher ground upon receiving red water level alerts from regional telemetry stations.</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; border-left: 4px solid var(--accent-amber);">
+                        <h4 style="color: #fff; margin-bottom: 6px;">Seismic Aftershock Precautions</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Stay clear of damaged masonry and glass façades for at least 6 hours following any registered magnitude 4.0+ tremor.</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Pakistan Flood & Disaster Intelligence Platform &bull; Secure Citizen Emergency Infrastructure</p>
+    </footer>
+
+    <!-- Toast Notification Global Function -->
+    <script>
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'fa-circle-info';
+            if (type === 'success') icon = 'fa-circle-check';
+            if (type === 'error') icon = 'fa-triangle-exclamation';
+
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+    </script>
+
+    <script>
+        function switchTab(sectionId, btn) {
+            document.querySelectorAll('.dash-card').forEach(card => card.style.display = 'none');
+            document.getElementById(sectionId).style.display = 'block';
+            document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function setPriority(element, level) {
+            document.querySelectorAll('.priority-pill').forEach(p => p.classList.remove('selected'));
+            element.classList.add('selected');
+            element.querySelector('input').checked = true;
+        }
+
+        async function logoutSession() {
+            const { supabase } = await import('./js/supabaseClient.js');
+            await supabase.auth.signOut();
+            showToast("Signed out securely from Supabase session.", "success");
+            setTimeout(() => window.location.href = "index.html", 1000);
+        }
+    </script>
+
+<script type="module">
+    import { supabase } from './js/supabaseClient.js';
+
+    let currentUser = null;
+
+    async function initCitizenPortal() {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session) {
+            showToast('Please sign in to access the citizen portal.', 'error');
+            setTimeout(() => window.location.href = 'index.html', 1000);
+            return;
+        }
+
+        currentUser = session.user;
+        const fullName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+        
+        // Update Sidebar UI with logged-in user details
+        document.getElementById('sidebarUserName').innerText = fullName;
+        document.getElementById('sidebarUserEmail').innerText = currentUser.email;
+        
+        const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        document.getElementById('sidebarAvatar').innerText = initials || 'AZ';
+
+        // Fetch citizen's specific incident records
+        fetchMyComplaints();
+    }
+
+    async function fetchMyComplaints() {
+        const { data: complaints, error } = await supabase
+            .from('complaints')
+            .select('*')
+            .eq('citizen_id', currentUser.id)
+            .order('created_at', { ascending: false });
+
+        if (!error && complaints) {
+            const tableBody = document.querySelector('#myRecordsTable tbody');
+            if (tableBody) {
+                tableBody.innerHTML = '';
+                if (complaints.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">No incident records found. Submit your first report above!</td></tr>`;
+                    return;
+                }
+                complaints.forEach((item) => {
+                    const row = document.createElement('tr');
+                    row.className = "border-b border-slate-800 hover:bg-slate-900/50";
+                    
+                    let badgeClass = 'status-pending';
+                    if (item.status === 'Verified' || item.status === 'Verified by Staff') badgeClass = 'status-verified';
+                    if (item.status === 'Resolved' || item.status === 'Rescue Dispatched') badgeClass = 'status-resolved';
+
+                    row.innerHTML = `
+                        <td style="font-weight: 600; color: var(--accent-cyan);">#FDIP-${item.id.toString().slice(0,4)}</td>
+                        <td>${item.category}</td>
+                        <td>${item.district || item.location}</td>
+                        <td><span style="color: ${item.priority === 'High' ? 'var(--accent-rose)' : item.priority === 'Medium' ? 'var(--accent-amber)' : 'var(--accent-emerald)'}; font-weight: 600;">${item.priority}</span></td>
+                        <td><span class="badge-status ${badgeClass}">${item.status}</span></td>
+                        <td style="color: var(--text-muted);">${new Date(item.created_at).toLocaleDateString()}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+    }
+
+    // Handle Report Form Submission
+    const reportForm = document.getElementById('citizenReportForm');
+    if (reportForm) {
+        reportForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const category = document.getElementById('reportCategory').value;
+            const district = document.getElementById('reportDistrict').value;
+            const location = document.getElementById('reportLocation').value;
+            const priorityInput = document.querySelector('input[name="priority"]:checked');
+            const priority = priorityInput ? priorityInput.value : 'Low';
+            const description = document.getElementById('reportDescription').value;
+            const fullName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+
+            // Insert directly into Supabase complaints table linked to auth user ID
+            const { error: insertError } = await supabase.from('complaints').insert([
+                {
+                    citizen_id: currentUser.id,
+                    citizen_name: fullName,
+                    category: category,
+                    district: district,
+                    location: location,
+                    priority: priority,
+                    description: description,
+                    status: 'Pending Review'
+                }
+            ]);
+
+            if (!insertError) {
+                showToast('Disaster report successfully saved to Supabase!', 'success');
+                reportForm.reset();
+                fetchMyComplaints();
+                // Switch to records tab to see updated entry
+                switchTab('records-section', document.querySelectorAll('.sidebar-menu button')[1]);
+            } else {
+                showToast('Error submitting report: ' + insertError.message, 'error');
+            }
+        });
+    }
+
+    initCitizenPortal();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Command Portal &bull; Pakistan Flood & Disaster Intelligence</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-container {
+            max-width: 1300px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .admin-header-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-glass);
+            padding: 25px 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-glass);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(12px);
+        }
+
+        .stat-box h3 {
+            font-size: 1.8rem;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .stat-box p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .master-table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 30px;
+            backdrop-filter: blur(12px);
+        }
+
+        .filter-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .filter-row select, .filter-row input {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-glass);
+            padding: 8px 14px;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.85rem;
+        }
+
+        /* Neatly structured grid table with horizontal and vertical borders */
+        #masterTable {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-glass);
+            table-layout: fixed;
+        }
+
+        #masterTable th, #masterTable td {
+            border: 1px solid var(--border-glass);
+            padding: 12px 14px;
+            text-align: left;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        #masterTable th {
+            background: rgba(255, 255, 255, 0.03);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        #masterTable td {
+            font-size: 0.85rem;
+        }
+
+        /* Specific Column Widths for Perfect Alignment */
+        #masterTable th:nth-child(1), #masterTable td:nth-child(1) { width: 13%; } /* Ticket ID */
+        #masterTable th:nth-child(2), #masterTable td:nth-child(2) { width: 15%; } /* Citizen Name */
+        #masterTable th:nth-child(3), #masterTable td:nth-child(3) { width: 22%; } /* Category */
+        #masterTable th:nth-child(4), #masterTable td:nth-child(4) { width: 15%; } /* District / Location */
+        #masterTable th:nth-child(5), #masterTable td:nth-child(5) { width: 10%; } /* Priority */
+        #masterTable th:nth-child(6), #masterTable td:nth-child(6) { width: 12%; } /* Status */
+        #masterTable th:nth-child(7), #masterTable td:nth-child(7) { width: 13%; } /* Actions */
+
+        @media(max-width: 992px) {
+            .admin-stats-row { grid-template-columns: repeat(2, 1fr); }
+            .admin-header-box { flex-direction: column; gap: 15px; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navbar -->
+    <header>
+        <div class="logo-section">
+            <div class="logo-box">FDIP</div>
+            <div class="logo-text">
+                <h1>Pakistan Flood & Disaster Intelligence</h1>
+                <p>National Staff Command Center</p>
+            </div>
+        </div>
+        
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="map.html">GIS Map</a>
+            <a href="alerts.html">Alerts</a>
+            <a href="admin.html" class="active">Staff Command</a>
+        </div>
+
+        <div class="auth-btn-group">
+            <button class="btn-auth btn-login" onclick="logoutAdmin()">Sign Out</button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="admin-container">
+        
+        <!-- Header Banner -->
+        <div class="admin-header-box">
+            <div>
+                <h2 style="color: #fff; font-size: 1.5rem; margin-bottom: 5px;">
+                    <i class="fa-solid fa-shield-halved" style="color: var(--accent-amber);"></i> National Operations Command Center
+                </h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Real-time monitoring and verification console for citizen-submitted hazard reports and automated sensor feeds across Pakistan.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <span class="live-badge-pill" style="margin-bottom: 0;"><div class="pulse-dot"></div> SECURE ADMIN SESSION</span>
+            </div>
+        </div>
+
+        <!-- Metrics Row -->
+        <div class="admin-stats-row">
+            <div class="stat-box">
+                <h3 id="statPending">0</h3>
+                <p>Pending Citizen Reports</p>
+            </div>
+            <div class="stat-box">
+                <h3 id="statHigh">0</h3>
+                <p>High Priority Dispatches</p>
+            </div>
+            <div class="stat-box">
+                <h3>128</h3>
+                <p>Active Telemetry Stations</p>
+            </div>
+            <div class="stat-box">
+                <h3>99.2%</h3>
+                <p>System Uptime Grid</p>
+            </div>
+        </div>
+
+        <!-- Master Citizen Complaints Table -->
+        <div class="master-table-card">
+            <div class="filter-row">
+                <div>
+                    <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 4px;">Citizen Incident Master Feed</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">Review severity, verify field notes, and dispatch rescue teams.</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <select id="priorityFilter" onchange="filterPriority(this.value)">
+                        <option value="all">Filter Priority: All</option>
+                        <option value="High">High / Critical</option>
+                        <option value="Medium">Medium Threat</option>
+                        <option value="Low">Low Risk</option>
+                    </select>
+                    <input type="text" id="searchInput" placeholder="Search district or ID..." onkeyup="searchTable(this.value)">
+                </div>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table id="masterTable">
+                    <thead>
+                        <tr>
+                            <th>Ticket ID</th>
+                            <th>Citizen Name</th>
+                            <th>Category</th>
+                            <th>District / Location</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated dynamically from Supabase -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Pakistan Flood & Disaster Intelligence Platform &bull; Secure National Command Infrastructure</p>
+    </footer>
+
+    <script>
+        function filterPriority(level) {
+            const rows = document.querySelectorAll('#masterTable tbody tr');
+            rows.forEach(row => {
+                const rowPriority = row.getAttribute('data-priority');
+                if (level === 'all' || rowPriority === level) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function searchTable(query) {
+            const term = query.toLowerCase();
+            const rows = document.querySelectorAll('#masterTable tbody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        }
+
+        async function logoutAdmin() {
+            const { supabase } = await import('./js/supabaseClient.js');
+            await supabase.auth.signOut();
+            alert("Admin session closed.");
+            window.location.href = "index.html";
+        }
+    </script>
+
+<script type="module">
+    import { supabase } from './js/supabaseClient.js';
+
+    async function initAdminDashboard() {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session || !session.user.email.endsWith('@fdip.gov.pk')) {
+            alert('Access Denied: Staff command portal requires official @fdip.gov.pk authentication.');
+            window.location.href = 'index.html';
+            return;
+        }
+
+        const { data: complaints, error } = await supabase
+            .from('complaints')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Admin feed fetch error:', error);
+            return;
+        }
+
+        // Compute dynamic counts
+        const pendingCount = complaints.filter(c => c.status === 'Pending Review' || c.status === 'Pending').length;
+        const highPriorityCount = complaints.filter(c => c.priority === 'High').length;
+
+        document.getElementById('statPending').innerText = pendingCount;
+        document.getElementById('statHigh').innerText = highPriorityCount;
+
+        // Render clean, consistent table feed
+        const tableBody = document.querySelector('#masterTable tbody');
+        if (tableBody) {
+            tableBody.innerHTML = '';
+            if (complaints.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">No incident records in the national queue.</td></tr>`;
+                return;
+            }
+
+            complaints.forEach((item) => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-slate-900/50 transition-colors";
+                row.setAttribute('data-priority', item.priority);
+                
+                let badgeClass = 'status-pending';
+                if (item.status === 'Verified' || item.status === 'Verified by Staff') badgeClass = 'status-verified';
+                if (item.status === 'Resolved' || item.status === 'Rescue Dispatched') badgeClass = 'status-resolved';
+
+                row.innerHTML = `
+                    <td><span class="font-mono" style="color: var(--accent-cyan); font-weight: 600;">#FDIP-${item.id.toString().slice(0,4)}</span></td>
+                    <td><span class="font-medium text-slate-200">${item.citizen_name || 'Citizen User'}</span></td>
+                    <td><span class="text-slate-300">${item.category}</span></td>
+                    <td><span class="text-slate-300">${item.district || item.location}</span></td>
+                    <td><span class="font-semibold" style="color: ${item.priority === 'High' ? 'var(--accent-rose)' : item.priority === 'Medium' ? 'var(--accent-amber)' : 'var(--accent-emerald)'};">${item.priority}</span></td>
+                    <td><span class="badge-status ${badgeClass} status-badge">${item.status}</span></td>
+                    <td>
+                        <select class="status-select" data-id="${item.id}" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); padding: 6px; border-radius: 6px; color: white; font-size: 0.8rem;">
+                            <option value="Pending Review">Pending Review</option>
+                            <option value="Verified by Staff">Verify</option>
+                            <option value="Rescue Dispatched">Dispatch</option>
+                            <option value="Resolved">Resolve</option>
+                            <option value="Discarded">Discard</option>
+                        </select>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // Handle status updation sync back to Supabase
+            document.querySelectorAll('.status-select').forEach(select => {
+                const currentBadge = select.parentElement.parentElement.querySelector('.status-badge').innerText;
+                select.value = currentBadge;
+
+                select.addEventListener('change', async (e) => {
+                    const newStatus = e.target.value;
+                    const recordId = e.target.getAttribute('data-id');
+
+                    const { error: updateError } = await supabase
+                        .from('complaints')
+                        .update({ status: newStatus })
+                        .eq('id', recordId);
+
+                    if (!updateError) {
+                        alert(`Status successfully updated to: ${newStatus}`);
+                        initAdminDashboard();
+                    } else {
+                        alert('Failed to update status.');
+                    }
+                });
+            });
+        }
+    }
+
+    initAdminDashboard();
+</script>
+
+</body>
+</html>

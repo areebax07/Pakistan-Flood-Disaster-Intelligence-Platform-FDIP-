@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FDIP — Pakistan Flood & Disaster Intelligence Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #030712; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
+        #map { height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; z-index: 1; }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background-color: #0f172a;
+            color: #f8fafc;
+            border: 1px solid #1e293b;
+        }
+    </style>
+</head>
+<body class="relative h-screen w-screen">
+
+    <!-- Leaflet Map Viewport -->
+    <div id="map"></div>
+
+    <!-- Floating Top Bar -->
+    <header class="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
+        <div class="glass-panel px-4 py-2.5 rounded-2xl flex items-center gap-3 pointer-events-auto">
+            <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-white text-xs shadow-lg shadow-cyan-500/30">
+                F
+            </div>
+            <span class="text-sm font-bold tracking-wider text-white">FDIP National Engine</span>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="w-1/3 relative pointer-events-auto">
+            <input type="text" id="search-input" placeholder="Search any city or coordinates in Pakistan..." 
+                class="w-full glass-panel text-slate-200 text-xs rounded-2xl px-4 py-3 focus:outline-none focus:border-cyan-500 transition shadow-lg">
+        </div>
+
+        <div class="glass-panel px-4 py-2.5 rounded-2xl flex items-center gap-3 pointer-events-auto">
+            <div class="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-emerald-400 text-[10px] font-semibold">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> LIVE BOUNDING BOX ACTIVE
+            </div>
+            <div id="clock" class="text-[11px] font-mono text-slate-400">00:00 PKT</div>
+        </div>
+    </header>
+
+    <!-- Floating Left Panel -->
+    <aside class="absolute top-24 left-4 z-20 w-64 glass-panel rounded-2xl p-3.5 space-y-4 pointer-events-auto">
+        <div>
+            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Map Theme</h3>
+            <button onclick="toggleMapTheme()" id="theme-toggle-btn" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-[11px] font-semibold text-cyan-400 border border-cyan-500/30 transition">
+                <span>Switch to Dark Mode</span>
+            </button>
+        </div>
+
+        <div class="border-t border-slate-800/80 pt-3">
+            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pakistan Bounding Layers</h3>
+            <div class="space-y-1">
+                <button onclick="toggleLayer('flood')" id="btn-flood" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800/80 text-[11px] font-medium text-white border border-slate-700/60 transition">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.8)]"></span> Flood & River Basin Zones
+                </button>
+                <button onclick="toggleLayer('aviation')" id="btn-aviation" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800/80 text-[11px] font-medium text-white border border-slate-700/60 transition">
+                    <span class="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(192,132,252,0.8)]"></span> Aviation Airspace Corridors
+                </button>
+                <button onclick="toggleLayer('agriculture')" id="btn-agriculture" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800/80 text-[11px] font-medium text-white border border-slate-700/60 transition">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"></span> Agricultural Health Grid
+                </button>
+                <button onclick="toggleLayer('earthquake')" id="btn-earthquake" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800/80 text-[11px] font-medium text-white border border-slate-700/60 transition">
+                    <span class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"></span> Seismic Activity (USGS)
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Legend Box -->
+        <div class="border-t border-slate-800/80 pt-3">
+            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dynamic Threshold Legend</h3>
+            <div class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/50">
+                <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"></span>
+                    <span>Danger / Critical Hazard</span>
+                </div>
+                <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]"></span>
+                    <span>Warning / Elevated Risk</span>
+                </div>
+                <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]"></span>
+                    <span>Normal Conditions</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Floating Right Panel -->
+    <aside class="absolute top-24 right-4 z-20 w-80 glass-panel rounded-2xl p-4 space-y-3.5 pointer-events-auto">
+        <div>
+            <div class="text-[9px] text-slate-400 uppercase tracking-wider">Targeted National Node</div>
+            <h2 id="selected-location" class="text-sm font-bold text-white mt-0.5">Islamabad, Capital</h2>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+            <div class="bg-slate-950/50 border border-slate-800/60 p-2.5 rounded-xl">
+                <div class="text-[10px] text-slate-400">Temperature</div>
+                <div id="metric-temp" class="text-base font-bold text-white mt-0.5">--°C</div>
+            </div>
+            <div class="bg-slate-950/50 border border-slate-800/60 p-2.5 rounded-xl">
+                <div class="text-[10px] text-slate-400">Rainfall (Live)</div>
+                <div id="metric-rain" class="text-base font-bold text-white mt-0.5">-- mm</div>
+            </div>
+            <div class="bg-slate-950/50 border border-slate-800/60 p-2.5 rounded-xl">
+                <div class="text-[10px] text-slate-400">Soil Moisture</div>
+                <div id="metric-soil" class="text-base font-bold text-white mt-0.5">-- m³/m³</div>
+            </div>
+            <div class="bg-slate-950/50 border border-slate-800/60 p-2.5 rounded-xl">
+                <div class="text-[10px] text-slate-400">Wind Speed</div>
+                <div id="metric-wind" class="text-base font-bold text-white mt-0.5">-- km/h</div>
+            </div>
+        </div>
+
+        <div id="hazard-banner" class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-2.5 flex items-center gap-2.5 transition-all">
+            <span id="hazard-icon" class="text-emerald-400 font-bold text-xs">●</span>
+            <div>
+                <div class="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Engine Evaluation Status</div>
+                <div id="hazard-status-text" class="text-[11px] text-emerald-200 font-medium">Safe: Normal Conditions</div>
+            </div>
+        </div>
+
+        <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 space-y-1">
+            <div class="text-[9px] font-bold text-cyan-400 uppercase tracking-wider">Algorithmic Advisory</div>
+            <p id="advisory-text" class="text-[11px] text-slate-300 leading-relaxed">
+                Click any dynamic node within Pakistan's bounding box to evaluate live metrics.
+            </p>
+        </div>
+    </aside>
+
+    <!-- Leaflet JS & Heatmap Library -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script type="module">
+        // Direct Supabase Credentials Configured
+        const SUPABASE_URL = "https://kdxrgzoopojtduadtisf.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkeHJnem9vcG9qdGR1YWR0aXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwNDg3MzAsImV4cCI6MjEwMjYyNDczMH0.iFU2g8V63pCWH0Zj6VpD9Sj_hNjVNMEhuu2WHMqohA4";
+        
+        let supabase = null;
+        if (typeof window.supabase !== 'undefined') {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+
+        const map = L.map('map', { zoomControl: false }).setView([30.3753, 69.3451], 6);
+
+        let streetTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        let darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+
+        let isDarkMode = false;
+        window.toggleMapTheme = function() {
+            const btn = document.getElementById('theme-toggle-btn');
+            if (isDarkMode) {
+                map.removeLayer(darkTiles);
+                streetTiles.addTo(map);
+                btn.innerHTML = '<span>Switch to Dark Mode</span>';
+                isDarkMode = false;
+            } else {
+                map.removeLayer(streetTiles);
+                darkTiles.addTo(map);
+                btn.innerHTML = '<span>Switch to Street View</span>';
+                isDarkMode = true;
+            }
+        };
+
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        const layerGroups = {
+            flood: L.layerGroup().addTo(map),
+            aviation: L.layerGroup().addTo(map),
+            agriculture: L.layerGroup().addTo(map),
+            earthquake: L.layerGroup().addTo(map)
+        };
+
+        window.toggleLayer = function(type) {
+            const btn = document.getElementById(`btn-${type}`);
+            if (map.hasLayer(layerGroups[type])) {
+                map.removeLayer(layerGroups[type]);
+                btn.classList.remove('bg-slate-800/80', 'border', 'border-slate-700/60', 'text-white');
+                btn.classList.add('text-slate-400');
+            } else {
+                map.addLayer(layerGroups[type]);
+                btn.classList.add('bg-slate-800/80', 'border', 'border-slate-700/60', 'text-white');
+                btn.classList.remove('text-slate-400');
+            }
+        };
+
+        let activeMarker = null;
+        const geoCache = new Map();
+
+        // Strict sovereign Pakistan polygon spatial check
+        function isStrictlyInPakistan(lat, lon) {
+            const pakistanPolygon = [
+                [37.083, 74.500], [36.900, 75.500], [35.500, 77.800], [34.500, 76.500],
+                [34.000, 74.500], [32.500, 74.800], [31.500, 74.600], [30.000, 72.000],
+                [28.000, 70.000], [25.000, 68.200], [23.700, 68.100], [25.000, 66.500],
+                [25.200, 62.000], [25.100, 60.850], [29.500, 61.000], [29.800, 66.000],
+                [31.500, 69.500], [33.000, 69.800], [34.000, 71.000], [35.000, 71.500],
+                [36.800, 71.800], [37.083, 74.500]
+            ];
+            let inside = false;
+            for (let i = 0, j = pakistanPolygon.length - 1; i < pakistanPolygon.length; j = i++) {
+                const xi = pakistanPolygon[i][0], yi = pakistanPolygon[i][1];
+                const xj = pakistanPolygon[j][0], yj = pakistanPolygon[j][1];
+                const intersect = ((yi > lon) !== (yj > lon)) && (lat < (xj - xi) * (lon - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        function generatePakistanGrid(step = 0.8) {
+            const grid = [];
+            for (let lat = 24.0; lat <= 36.5; lat += step) {
+                for (let lon = 61.0; lon <= 76.5; lon += step) {
+                    if (isStrictlyInPakistan(lat, lon)) {
+                        grid.push({ lat: parseFloat(lat.toFixed(2)), lon: parseFloat(lon.toFixed(2)) });
+                    }
+                }
+            }
+            return grid;
+        }
+
+        // Location Lookup with Immediate Local Fallback Dictionary
+        async function fetchDynamicLocationName(lat, lon) {
+            const latNum = parseFloat(lat);
+            const lonNum = parseFloat(lon);
+            const cacheKey = `${latNum.toFixed(2)},${lonNum.toFixed(2)}`;
+            
+            if (geoCache.has(cacheKey)) return geoCache.get(cacheKey);
+
+            let approxName = "";
+            if (latNum >= 33.5 && latNum <= 34.0 && lonNum >= 72.8 && lonNum <= 73.3) approxName = "Islamabad / Rawalpindi, Punjab";
+            else if (latNum >= 31.3 && latNum <= 31.8 && lonNum >= 74.1 && lonNum <= 74.6) approxName = "Lahore, Punjab";
+            else if (latNum >= 24.7 && latNum <= 25.2 && lonNum >= 66.7 && lonNum <= 67.5) approxName = "Karachi, Sindh";
+            else if (latNum >= 33.9 && latNum <= 34.3 && lonNum >= 71.4 && lonNum <= 71.8) approxName = "Peshawar, KPK";
+            else if (latNum >= 30.0 && latNum <= 30.4 && lonNum >= 66.8 && lonNum <= 67.2) approxName = "Quetta, Balochistan";
+            else if (latNum >= 30.1 && latNum <= 30.4 && lonNum >= 71.3 && lonNum <= 71.7) approxName = "Multan, Punjab";
+            else if (latNum >= 25.3 && latNum <= 25.6 && lonNum >= 68.2 && lonNum <= 68.6) approxName = "Hyderabad, Sindh";
+
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latNum}&lon=${lonNum}&zoom=10`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.address) {
+                        const city = data.address.city || data.address.town || data.address.village || data.address.county || data.address.district || data.address.state_district;
+                        const state = data.address.state || "Pakistan";
+                        if (city) {
+                            const name = `${city}, ${state}`;
+                            geoCache.set(cacheKey, name);
+                            return name;
+                        }
+                    }
+                }
+            } catch (e) {}
+
+            const fallback = approxName || `District Near (${latNum.toFixed(1)}°N, ${lonNum.toFixed(1)}°E)`;
+            geoCache.set(cacheKey, fallback);
+            return fallback;
+        }
+
+        async function saveHazardsToSupabase(hazards) {
+            if (!supabase || hazards.length === 0) return;
+            try {
+                const alertRecords = hazards.map(item => ({
+                    title: `${item.type} in ${item.name || 'Pakistan'}`,
+                    description: `${item.type} detected with calculated metric value: ${item.value} ${item.unit}. (Lat: ${item.lat}, Lon: ${item.lon})`,
+                    severity_level: item.severity,
+                    active_status: true
+                }));
+
+                const { data: existingAlerts } = await supabase.from('alerts').select('title, description');
+                const existingAlertKeys = new Set(existingAlerts ? existingAlerts.map(a => `${a.title}|${a.description}`) : []);
+                const newAlertRecords = alertRecords.filter(a => !existingAlertKeys.has(`${a.title}|${a.description}`));
+
+                if (newAlertRecords.length > 0) {
+                    await supabase.from('alerts').insert(newAlertRecords);
+                }
+
+                const seismicItems = hazards.filter(item => item.type === 'Seismic / Earthquake Activity');
+                if (seismicItems.length > 0) {
+                    const earthquakeRecords = seismicItems.map(eq => ({
+                        magnitude: eq.value,
+                        location: eq.name || 'Pakistan Region',
+                        latitude: eq.lat,
+                        longitude: eq.lon,
+                        depth: eq.depth || 10.0,
+                        time: eq.isoTime || new Date().toISOString()
+                    }));
+
+                    const { data: existingEarthquakes } = await supabase.from('earthquakes').select('location, time');
+                    const existingEqKeys = new Set(existingEarthquakes ? existingEarthquakes.map(e => `${e.location}|${e.time}`) : []);
+                    const newEqRecords = earthquakeRecords.filter(e => !existingEqKeys.has(`${e.location}|${e.time}`));
+
+                    if (newEqRecords.length > 0) {
+                        await supabase.from('earthquakes').insert(newEqRecords);
+                    }
+                }
+            } catch (err) {
+                console.error("Supabase Sync Error:", err);
+            }
+        }
+
+        async function evaluateLocation(lat, lon, locationName) {
+            let finalName = locationName;
+            if (!finalName || finalName.includes('Lat:') || finalName.includes('Zone (') || finalName.includes('District Near')) {
+                finalName = await fetchDynamicLocationName(lat, lon);
+            }
+            document.getElementById('selected-location').innerText = finalName;
+            document.getElementById('metric-temp').innerText = 'Fetching...';
+            document.getElementById('metric-rain').innerText = 'Fetching...';
+            document.getElementById('metric-soil').innerText = 'Fetching...';
+            document.getElementById('metric-wind').innerText = 'Fetching...';
+
+            try {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,rain,wind_speed_10m,soil_moisture_0_to_7cm`);
+                const json = await res.json();
+                const current = json.current;
+
+                const temp = current.temperature_2m;
+                const rain = current.rain;
+                const soil = current.soil_moisture_0_to_7cm !== undefined ? current.soil_moisture_0_to_7cm : 0.20;
+                const wind = current.wind_speed_10m;
+
+                document.getElementById('metric-temp').innerText = `${temp}°C`;
+                document.getElementById('metric-rain').innerText = `${rain} mm`;
+                document.getElementById('metric-soil').innerText = `${soil} m³/m³`;
+                document.getElementById('metric-wind').innerText = `${wind} km/h`;
+
+                runHazardRules(rain, soil, wind, finalName);
+            } catch (err) {
+                console.error("Telemetry error:", err);
+                document.getElementById('metric-temp').innerText = 'Error';
+            }
+        }
+
+        function runHazardRules(rain, soil, wind, locationName) {
+            const banner = document.getElementById('hazard-banner');
+            const icon = document.getElementById('hazard-icon');
+            const statusText = document.getElementById('hazard-status-text');
+            const advisoryText = document.getElementById('advisory-text');
+
+            const isDanger = rain > 15 || soil > 0.42 || wind > 40;
+            const isWarning = (rain > 5 && rain <= 15) || (soil > 0.32 && soil <= 0.42) || soil < 0.12 || (wind > 22 && wind <= 40);
+
+            if (isDanger) {
+                banner.className = 'bg-red-500/10 border border-red-500/30 rounded-xl p-2.5 flex items-center gap-2.5';
+                icon.className = 'text-red-500 font-bold text-xs';
+                statusText.className = 'text-[11px] text-red-200 font-medium';
+                statusText.innerText = `DANGER: Critical Hazard Active`;
+                advisoryText.innerText = `Critical Threshold Exceeded: High rainfall (${rain}mm), extreme topsoil waterlogging (${soil} m³/m³), or dangerous winds (${wind}km/h) recorded at ${locationName}.`;
+            } else if (isWarning) {
+                banner.className = 'bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 flex items-center gap-2.5';
+                icon.className = 'text-amber-400 font-bold text-xs';
+                statusText.className = 'text-[11px] text-amber-200 font-medium';
+                statusText.innerText = `WARNING: Elevated Risk / Moisture Stress`;
+                advisoryText.innerText = `Warning State: Soil moisture levels at ${locationName} indicate agricultural drought stress (${soil} m³/m³) or elevated surface runoff requiring monitoring.`;
+            } else {
+                banner.className = 'bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-2.5 flex items-center gap-2.5';
+                icon.className = 'text-emerald-400 font-bold text-xs';
+                statusText.className = 'text-[11px] text-emerald-200 font-medium';
+                statusText.innerText = `Safe: Normal Conditions`;
+                advisoryText.innerText = `Normal precipitation and optimal soil moisture parameters at ${locationName}. No active hazard.`;
+            }
+        }
+
+        map.on('click', async (e) => {
+            const lat = e.latlng.lat.toFixed(4);
+            const lon = e.latlng.lng.toFixed(4);
+
+            if (activeMarker) map.removeLayer(activeMarker);
+            activeMarker = L.marker([lat, lon]).addTo(map);
+
+            const locationName = await fetchDynamicLocationName(lat, lon);
+            evaluateLocation(lat, lon, locationName);
+        });
+
+        // Scan National Grid & Evaluate API Telemetry Directly
+        async function scanAndPlotNationalGrid() {
+            const gridPoints = generatePakistanGrid(0.8);
+            const lats = gridPoints.map(g => g.lat).join(',');
+            const lons = gridPoints.map(g => g.lon).join(',');
+
+            const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=rain,soil_moisture_0_to_7cm,wind_speed_10m&daily=precipitation_sum&past_days=7&forecast_days=1`;
+            const floodUrl = `https://flood-api.open-meteo.com/v1/flood?latitude=${lats}&longitude=${lons}&daily=river_discharge&past_days=3&forecast_days=1`;
+
+            const [weatherRes, floodRes] = await Promise.all([
+                fetch(weatherUrl).then(r => r.json()).catch(() => null),
+                fetch(floodUrl).then(r => r.json()).catch(() => null)
+            ]);
+
+            if (!weatherRes) return;
+            const wData = Array.isArray(weatherRes) ? weatherRes : [weatherRes];
+            const fData = floodRes && Array.isArray(floodRes) ? floodRes : floodRes ? [floodRes] : [];
+
+            let detectedHazards = [];
+            let floodHeatPoints = [];
+            let aviationVectorCoords = [];
+
+            for (let i = 0; i < gridPoints.length; i++) {
+                const pt = gridPoints[i];
+                const w = wData[i];
+                if (!w) continue;
+
+                const rain24h = w.current?.rain || 0;
+                const soil = w.current?.soil_moisture_0_to_7cm !== undefined ? w.current.soil_moisture_0_to_7cm : 0.20;
+                const wind = w.current?.wind_speed_10m || 0;
+
+                const precArray = w.daily?.precipitation_sum || [0];
+                const rain7d = precArray.reduce((acc, curr) => acc + (curr || 0), 0);
+                
+                let discharge = 0;
+                if (fData[i] && fData[i].daily && fData[i].daily.river_discharge) {
+                    discharge = fData[i].daily.river_discharge[0] || 0;
+                }
+
+                // -------------------------------------------------------------
+                // 1. FLOOD LAYER LOGIC (Heavy Rainfall OR River Basin Flow)
+                // -------------------------------------------------------------
+                const isFlashFlood = rain24h > 10 || rain7d > 45;
+                const isRiverineFlood = discharge > 120; // Open-Meteo river discharge flow trigger
+
+                if (isFlashFlood || isRiverineFlood) {
+                    const isDanger = rain24h > 25 || rain7d > 90 || discharge > 250;
+                    const floodColor = isDanger ? '#ef4444' : '#f59e0b';
+                    const floodStatus = isDanger ? 'Critical Flood Warning' : 'Elevated Flood Risk';
+
+                    const floodIcon = `<div style="background-color: ${floodColor}; width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 10px ${floodColor}; border: 2px solid #0f172a;"></div>`;
+                    const floodMarker = L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'flood-node', html: floodIcon, iconSize: [14, 14] }) });
+                    
+                    floodMarker.on('click', async () => {
+                        if (activeMarker) map.removeLayer(activeMarker);
+                        activeMarker = L.marker([pt.lat, pt.lon]).addTo(map);
+                        const name = await fetchDynamicLocationName(pt.lat, pt.lon);
+                        floodMarker.bindPopup(`<b>🌊 Flood Alert Node</b><br>Location: ${name}<br>Status: ${floodStatus}<br>Rainfall (24h): ${rain24h} mm<br>River Discharge: ${discharge} m³/s`).openPopup();
+                        evaluateLocation(pt.lat, pt.lon, name);
+                    });
+                    
+                    layerGroups.flood.addLayer(floodMarker);
+                    floodHeatPoints.push([pt.lat, pt.lon, isDanger ? 1.0 : 0.5]);
+
+                    const locName = await fetchDynamicLocationName(pt.lat, pt.lon);
+                    detectedHazards.push({
+                        lat: pt.lat,
+                        lon: pt.lon,
+                        name: locName,
+                        type: isRiverineFlood ? 'Riverine Flood Overflow' : 'Flash Flood Warning',
+                        severity: isDanger ? 'DANGER' : 'WARNING',
+                        value: isRiverineFlood ? discharge : rain24h,
+                        unit: isRiverineFlood ? 'm³/s' : 'mm'
+                    });
+                }
+
+                // -------------------------------------------------------------
+                // 2. AGRICULTURAL HEALTH LAYER LOGIC (Soil Moisture API)
+                // -------------------------------------------------------------
+                const isDrought = soil < 0.12;
+                const isWaterlogged = soil > 0.38 && rain7d > 15;
+
+                if (isDrought || isWaterlogged) {
+                    const agriColor = isWaterlogged ? '#ef4444' : '#f59e0b';
+                    const agriStatus = isWaterlogged ? 'Severe Waterlogging / Crop Inundation' : 'Agricultural Drought Stress';
+
+                    const agriIcon = `<div style="background-color: ${agriColor}; width: 14px; height: 14px; border-radius: 3px; box-shadow: 0 0 8px ${agriColor}; border: 2px solid #0f172a;"></div>`;
+                    const agriMarker = L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'agri-node', html: agriIcon, iconSize: [14, 14] }) });
+
+                    agriMarker.on('click', async () => {
+                        if (activeMarker) map.removeLayer(activeMarker);
+                        activeMarker = L.marker([pt.lat, pt.lon]).addTo(map);
+                        const name = await fetchDynamicLocationName(pt.lat, pt.lon);
+                        agriMarker.bindPopup(`<b>🌾 Agricultural Health Node</b><br>Location: ${name}<br>Status: ${agriStatus}<br>Topsoil Moisture: ${soil} m³/m³`).openPopup();
+                        evaluateLocation(pt.lat, pt.lon, name);
+                    });
+                    
+                    layerGroups.agriculture.addLayer(agriMarker);
+
+                    const locName = await fetchDynamicLocationName(pt.lat, pt.lon);
+                    detectedHazards.push({
+                        lat: pt.lat,
+                        lon: pt.lon,
+                        name: locName,
+                        type: isWaterlogged ? 'Agricultural Waterlogging Risk' : 'Crop Drought Warning',
+                        severity: isWaterlogged ? 'DANGER' : 'WARNING',
+                        value: soil,
+                        unit: 'm³/m³'
+                    });
+                }
+
+                // -------------------------------------------------------------
+                // 3. AVIATION CORRIDOR LAYER LOGIC
+                // -------------------------------------------------------------
+                if (i % 3 === 0) {
+                    let avColor = '#c084fc';
+                    if (wind > 35 || rain24h > 10) avColor = '#ef4444';
+
+                    const avIcon = `<div style="background-color: ${avColor}; width: 14px; height: 14px; border-radius: 4px; box-shadow: 0 0 10px ${avColor}; border: 2px solid #0f172a;"></div>`;
+                    const avMarker = L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'aviation-node', html: avIcon, iconSize: [14, 14] }) });
+
+                    avMarker.on('click', async () => {
+                        if (activeMarker) map.removeLayer(activeMarker);
+                        activeMarker = L.marker([pt.lat, pt.lon]).addTo(map);
+                        const name = await fetchDynamicLocationName(pt.lat, pt.lon);
+                        avMarker.bindPopup(`<b>✈️ Aviation Airspace Node</b><br>Location: ${name}<br>Wind Speed: ${wind} km/h | Rain: ${rain24h} mm`).openPopup();
+                        evaluateLocation(pt.lat, pt.lon, name);
+                    });
+                    layerGroups.aviation.addLayer(avMarker);
+                    aviationVectorCoords.push([pt.lat, pt.lon]);
+                }
+            }
+
+            // Continuous Heatmap Overlay for Flood Layer
+            if (L.heatLayer && floodHeatPoints.length > 0) {
+                const floodHeat = L.heatLayer(floodHeatPoints, { radius: 25, blur: 15, maxZoom: 10 });
+                layerGroups.flood.addLayer(floodHeat);
+            }
+
+            // Aviation Corridor Path Polyline Connection
+            if (aviationVectorCoords.length > 1) {
+                const aviationCorridorPath = L.polyline(aviationVectorCoords, {
+                    color: '#c084fc',
+                    weight: 1.5,
+                    opacity: 0.35,
+                    dashArray: '6, 8'
+                });
+                layerGroups.aviation.addLayer(aviationCorridorPath);
+            }
+
+            saveHazardsToSupabase(detectedHazards);
+        }
+
+        // Live Earthquakes with Magnitude >= 2.0 filtering strictly within Pakistan polygon
+        async function initEarthquakes() {
+            try {
+                const minLat = 23.583, maxLat = 37.083, minLon = 60.833, maxLon = 77.833;
+                const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                const quakeUrl = `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minmagnitude=2.0&minlatitude=${minLat}&maxlatitude=${maxLat}&minlongitude=${minLon}&maxlongitude=${maxLon}&starttime=${thirtyDaysAgo}`;
+
+                const quakeRes = await fetch(quakeUrl);
+                const quakeData = await quakeRes.json();
+                let seismicHazards = [];
+
+                if (quakeData && quakeData.features) {
+                    for (const eq of quakeData.features) {
+                        const [lon, lat, depth] = eq.geometry.coordinates;
+                        if (isStrictlyInPakistan(lat, lon)) {
+                            const timeOccurred = new Date(eq.properties.time).toLocaleString();
+                            const isoTime = new Date(eq.properties.time).toISOString();
+                            const mag = eq.properties.mag;
+
+                            const marker = L.circleMarker([lat, lon], {
+                                radius: Math.max(6, mag * 3),
+                                fillColor: mag >= 4.5 ? '#ef4444' : '#f59e0b',
+                                color: '#0f172a',
+                                weight: 2,
+                                fillOpacity: 0.85
+                            });
+
+                            marker.on('click', async () => {
+                                if (activeMarker) map.removeLayer(activeMarker);
+                                activeMarker = L.marker([lat, lon]).addTo(map);
+                                const place = await fetchDynamicLocationName(lat, lon);
+                                marker.bindPopup(`<b>🚨 Seismic Activity Event</b><br>Location: ${place}<br>Time: ${timeOccurred}<br>Magnitude: ${mag} M_w<br>Depth: ${depth} km`).openPopup();
+                                evaluateLocation(lat, lon, place);
+                            });
+
+                            layerGroups.earthquake.addLayer(marker);
+
+                            seismicHazards.push({
+                                lat: lat,
+                                lon: lon,
+                                depth: depth,
+                                isoTime: isoTime,
+                                name: "Pakistan Region",
+                                type: 'Seismic / Earthquake Activity',
+                                severity: mag >= 4.5 ? 'DANGER' : mag >= 3.2 ? 'WARNING' : 'LOW',
+                                value: mag,
+                                unit: 'Magnitude'
+                            });
+                        }
+                    }
+                }
+
+                saveHazardsToSupabase(seismicHazards);
+            } catch (e) {
+                console.error("Earthquake loading error:", e);
+            }
+        }
+
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                const query = searchInput.value;
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                    const results = await res.json();
+                    if (results && results.length > 0) {
+                        const lat = parseFloat(results[0].lat);
+                        const lon = parseFloat(results[0].lon);
+                        map.setView([lat, lon], 9);
+                        const locName = await fetchDynamicLocationName(lat, lon);
+                        evaluateLocation(lat, lon, locName);
+                    }
+                } catch (err) {}
+            }
+        });
+
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString() + ' PKT';
+        }, 1000);
+
+        scanAndPlotNationalGrid();
+        initEarthquakes();
+        evaluateLocation(33.6844, 73.0479, "Islamabad, Capital");
+    </script>
+</body>
+</html>
