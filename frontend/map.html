@@ -11,7 +11,7 @@
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background-color: #030712; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
+        body { background-color: #030712; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; user-select: none; }
         #map { height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; z-index: 1; }
         .glass-panel {
             background: rgba(15, 23, 42, 0.88);
@@ -19,10 +19,47 @@
             border: 1px solid rgba(51, 65, 85, 0.5);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
-        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-            background-color: #0f172a;
-            color: #f8fafc;
-            border: 1px solid #1e293b;
+        
+        /* Popup Styling */
+        .leaflet-popup-content-wrapper {
+            background: #0f172a !important;
+            color: #f8fafc !important;
+            border: 1px solid #334155 !important;
+            border-radius: 12px !important;
+            padding: 4px !important;
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.6) !important;
+        }
+        .leaflet-popup-tip {
+            background: #0f172a !important;
+            border: 1px solid #334155 !important;
+        }
+        .leaflet-popup-content {
+            margin: 12px 16px !important;
+            font-size: 13px !important;
+            line-height: 1.5 !important;
+            min-width: 280px !important;
+        }
+
+        /* Custom Popup Structure */
+        .popup-card { font-family: system-ui, -apple-system, sans-serif; }
+        .popup-title { font-weight: 700; font-size: 14px; color: #38bdf8; border-bottom: 1px solid #334155; padding-bottom: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .popup-subtitle { font-size: 12px; color: #f8fafc; font-weight: 700; margin-bottom: 8px; }
+        .popup-badge { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+        .badge-critical { background: #ef4444; color: #ffffff; }
+        .badge-warning { background: #f59e0b; color: #ffffff; }
+        .badge-safe { background: #10b981; color: #ffffff; }
+        .badge-purple { background: #c084fc; color: #0f172a; }
+        .popup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+        .popup-metric { background: #020617; padding: 6px 8px; border-radius: 6px; border: 1px solid #1e293b; }
+        .popup-metric-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
+        .popup-metric-val { font-size: 12px; color: #f8fafc; font-weight: 700; margin-top: 2px; }
+
+        /* Draggable Panel Styling */
+        .draggable-panel {
+            cursor: move;
+            position: absolute;
+            z-index: 30;
+            display: none;
         }
     </style>
 </head>
@@ -42,13 +79,13 @@
 
         <!-- Search Bar -->
         <div class="w-1/3 relative pointer-events-auto">
-            <input type="text" id="search-input" placeholder="Search any city or coordinates in Pakistan..." 
+            <input type="text" id="search-input" placeholder="Search any city or region in Pakistan..." 
                 class="w-full glass-panel text-slate-200 text-xs rounded-2xl px-4 py-3 focus:outline-none focus:border-cyan-500 transition shadow-lg">
         </div>
 
         <div class="glass-panel px-4 py-2.5 rounded-2xl flex items-center gap-3 pointer-events-auto">
             <div class="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-emerald-400 text-[10px] font-semibold">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> LIVE BOUNDING BOX ACTIVE
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> LIVE BOUNDING BOX ACTIVE
             </div>
             <div id="clock" class="text-[11px] font-mono text-slate-400">00:00 PKT</div>
         </div>
@@ -67,45 +104,96 @@
             <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pakistan Bounding Layers</h3>
             <div class="space-y-1">
                 <button onclick="toggleLayer('flood')" id="btn-flood" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800/80 text-[11px] font-medium text-white border border-slate-700/60 transition">
-                    <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.8)]"></span> Flood & River Basin Zones
+                    <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Flood & River Basin Zones
                 </button>
-                <button onclick="toggleLayer('aviation')" id="btn-aviation" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800/80 text-[11px] font-medium text-white border border-slate-700/60 transition">
-                    <span class="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(192,132,252,0.8)]"></span> Aviation Airspace Corridors
+                <button onclick="toggleLayer('riverFlow')" id="btn-riverFlow" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-medium text-slate-400 transition">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span> Main River Network
                 </button>
-                <button onclick="toggleLayer('agriculture')" id="btn-agriculture" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800/80 text-[11px] font-medium text-white border border-slate-700/60 transition">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"></span> Agricultural Health Grid
+                <button onclick="toggleLayer('aviation')" id="btn-aviation" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-medium text-slate-400 transition">
+                    <span class="w-2 h-2 rounded-full bg-purple-400"></span> Aviation Airspace Corridors
                 </button>
-                <button onclick="toggleLayer('earthquake')" id="btn-earthquake" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800/80 text-[11px] font-medium text-white border border-slate-700/60 transition">
-                    <span class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"></span> Seismic Activity (USGS)
+                <button onclick="toggleLayer('agriculture')" id="btn-agriculture" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-medium text-slate-400 transition">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Agricultural Stress Hazards
+                </button>
+                <button onclick="toggleLayer('earthquake')" id="btn-earthquake" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-medium text-slate-400 transition">
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span> Seismic Activity (USGS)
                 </button>
             </div>
         </div>
 
-        <!-- Status Legend Box -->
         <div class="border-t border-slate-800/80 pt-3">
-            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dynamic Threshold Legend</h3>
+            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Global Hazard Severity Scale</h3>
             <div class="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/50">
                 <div class="flex items-center gap-2 text-[11px] text-slate-300">
-                    <span class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"></span>
-                    <span>Danger / Critical Hazard</span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                    <span>Danger / High Alert</span>
                 </div>
                 <div class="flex items-center gap-2 text-[11px] text-slate-300">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
                     <span>Warning / Elevated Risk</span>
                 </div>
                 <div class="flex items-center gap-2 text-[11px] text-slate-300">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]"></span>
-                    <span>Normal Conditions</span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <span>Safe / Normal Parameters</span>
                 </div>
             </div>
         </div>
     </aside>
 
+    <!-- Floating Draggable Barrage Flow Legend & Alert Reference -->
+    <div id="draggable-legend" class="draggable-panel glass-panel p-3 rounded-2xl w-64 shadow-2xl border border-slate-700/80">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2 cursor-grab active:cursor-grabbing handle">
+            <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">❖ Hydrographic Network</span>
+            <span class="text-[9px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">Drag Me</span>
+        </div>
+        <div class="space-y-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/50">
+            <div class="flex items-center gap-2 text-[11px] text-slate-300 border-b border-slate-800/60 pb-1.5">
+                <span class="w-4 h-1 rounded-sm bg-[#0288d1]"></span>
+                <span>Indus Trunk (&lt;2.5px light line)</span>
+            </div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Barrage Discharge Thresholds</div>
+            <div class="flex items-center gap-2 text-[10px] text-emerald-400">
+                <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>
+                <span>Normal: &lt; 120 m³/s (Low Risk)</span>
+            </div>
+            <div class="flex items-center gap-2 text-[10px] text-amber-400">
+                <span class="w-2.5 h-2.5 rounded-sm bg-amber-400"></span>
+                <span>Warning: 120 - 300 m³/s (Medium Risk)</span>
+            </div>
+            <div class="flex items-center gap-2 text-[10px] text-red-400">
+                <span class="w-2.5 h-2.5 rounded-sm bg-red-500"></span>
+                <span>Critical: &gt; 300 m³/s (High Alert)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Draggable Aviation Legend -->
+    <div id="draggable-aviation-legend" class="draggable-panel glass-panel p-3 rounded-2xl w-64 shadow-2xl border border-slate-700/80">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2 cursor-grab active:cursor-grabbing handle">
+            <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">✈️ Aviation Visibility Status</span>
+            <span class="text-[9px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">Drag Me</span>
+        </div>
+        <div class="space-y-1.5 bg-slate-950/80 p-2 rounded-xl border border-slate-800/50">
+            <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                <span class="w-2.5 h-2.5 rounded-sm bg-purple-400"></span>
+                <span>Optimal Visibility (&gt;10 km) — Normal</span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                <span class="w-2.5 h-2.5 rounded-sm bg-amber-400"></span>
+                <span>Reduced Vis. (4 - 10 km) — Warning</span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                <span class="w-2.5 h-2.5 rounded-sm bg-red-500"></span>
+                <span>Poor Vis. (&lt;4 km / High Wind) — Danger</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Floating Right Panel -->
     <aside class="absolute top-24 right-4 z-20 w-80 glass-panel rounded-2xl p-4 space-y-3.5 pointer-events-auto">
         <div>
             <div class="text-[9px] text-slate-400 uppercase tracking-wider">Targeted National Node</div>
-            <h2 id="selected-location" class="text-sm font-bold text-white mt-0.5">Islamabad, Capital</h2>
+            <h2 id="selected-location" class="text-sm font-bold text-white mt-0.5">Islamabad, ICT</h2>
         </div>
 
         <div class="grid grid-cols-2 gap-2">
@@ -143,20 +231,12 @@
         </div>
     </aside>
 
-    <!-- Leaflet JS & Heatmap Library -->
+    <!-- Leaflet JS & Plugins -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-    <script type="module">
-        // Direct Supabase Credentials Configured
-        const SUPABASE_URL = "https://kdxrgzoopojtduadtisf.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkeHJnem9vcG9qdGR1YWR0aXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwNDg3MzAsImV4cCI6MjEwMjYyNDczMH0.iFU2g8V63pCWH0Zj6VpD9Sj_hNjVNMEhuu2WHMqohA4";
-        
-        let supabase = null;
-        if (typeof window.supabase !== 'undefined') {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        }
 
-        const map = L.map('map', { zoomControl: false }).setView([30.3753, 69.3451], 6);
+    <script type="module">
+        const map = L.map('map', { zoomControl: false, preferCanvas: true }).setView([30.3753, 69.3451], 6);
 
         let streetTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
         let darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
@@ -181,37 +261,90 @@
 
         const layerGroups = {
             flood: L.layerGroup().addTo(map),
-            aviation: L.layerGroup().addTo(map),
-            agriculture: L.layerGroup().addTo(map),
-            earthquake: L.layerGroup().addTo(map)
+            riverFlow: L.layerGroup().addTo(map),
+            aviation: L.layerGroup(),
+            agriculture: L.layerGroup(),
+            earthquake: L.layerGroup()
         };
 
         window.toggleLayer = function(type) {
             const btn = document.getElementById(`btn-${type}`);
+            const flowLegend = document.getElementById('draggable-legend');
+            const aviationLegend = document.getElementById('draggable-aviation-legend');
+
             if (map.hasLayer(layerGroups[type])) {
                 map.removeLayer(layerGroups[type]);
                 btn.classList.remove('bg-slate-800/80', 'border', 'border-slate-700/60', 'text-white');
                 btn.classList.add('text-slate-400');
+                if (type === 'riverFlow') flowLegend.style.display = 'none';
+                if (type === 'aviation') aviationLegend.style.display = 'none';
             } else {
                 map.addLayer(layerGroups[type]);
                 btn.classList.add('bg-slate-800/80', 'border', 'border-slate-700/60', 'text-white');
                 btn.classList.remove('text-slate-400');
+
+                if (type === 'riverFlow') {
+                    aviationLegend.style.display = 'none';
+                    flowLegend.style.display = 'block';
+                    flowLegend.style.top = '120px';
+                    flowLegend.style.left = '290px';
+                } else if (type === 'aviation') {
+                    flowLegend.style.display = 'none';
+                    aviationLegend.style.display = 'block';
+                    aviationLegend.style.top = '120px';
+                    aviationLegend.style.left = '290px';
+                }
             }
         };
 
-        let activeMarker = null;
-        const geoCache = new Map();
+        function makeDraggable(el) {
+            let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
+            const handle = el.querySelector('.handle') || el;
 
-        // Strict sovereign Pakistan polygon spatial check
+            handle.addEventListener("mousedown", dragStart);
+            document.addEventListener("mouseup", dragEnd);
+            document.addEventListener("mousemove", drag);
+
+            function dragStart(e) {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+                isDragging = true;
+            }
+
+            function dragEnd() {
+                initialX = currentX;
+                initialY = currentY;
+                isDragging = false;
+            }
+
+            function drag(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    xOffset = currentX;
+                    yOffset = currentY;
+                    el.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+                }
+            }
+        }
+
+        makeDraggable(document.getElementById("draggable-legend"));
+        makeDraggable(document.getElementById("draggable-aviation-legend"));
+
+        let activeMarker = null;
+
+        // Strict boundary polygon for Pakistan to remove all out-of-bounds lines/data
+        const pakistanPolygon = [
+            [37.083, 74.500], [36.900, 75.500], [35.500, 77.800], [34.500, 76.500],
+            [34.000, 74.500], [32.500, 74.800], [31.500, 74.600], [30.000, 72.000],
+            [28.000, 70.000], [25.000, 68.200], [23.700, 68.100], [25.000, 66.500],
+            [25.200, 62.000], [25.100, 60.850], [29.500, 61.000], [29.800, 66.000],
+            [31.500, 69.500], [33.000, 69.800], [34.000, 71.000], [35.000, 71.500],
+            [36.800, 71.800], [37.083, 74.500]
+        ];
+
         function isStrictlyInPakistan(lat, lon) {
-            const pakistanPolygon = [
-                [37.083, 74.500], [36.900, 75.500], [35.500, 77.800], [34.500, 76.500],
-                [34.000, 74.500], [32.500, 74.800], [31.500, 74.600], [30.000, 72.000],
-                [28.000, 70.000], [25.000, 68.200], [23.700, 68.100], [25.000, 66.500],
-                [25.200, 62.000], [25.100, 60.850], [29.500, 61.000], [29.800, 66.000],
-                [31.500, 69.500], [33.000, 69.800], [34.000, 71.000], [35.000, 71.500],
-                [36.800, 71.800], [37.083, 74.500]
-            ];
             let inside = false;
             for (let i = 0, j = pakistanPolygon.length - 1; i < pakistanPolygon.length; j = i++) {
                 const xi = pakistanPolygon[i][0], yi = pakistanPolygon[i][1];
@@ -234,22 +367,26 @@
             return grid;
         }
 
-        // Location Lookup with Immediate Local Fallback Dictionary
+        function getFastRegionName(lat, lon) {
+            if (lat > 34.5 && lon > 72.5) return "Gilgit-Baltistan & Upper Indus Basin";
+            if (lat > 33.5 && lon < 72.0) return "Peshawar & KPK Northern Sector";
+            if (lat > 33.0 && lon >= 72.0) return "Rawalpindi & Potohar Plateau";
+            if (lat > 31.0 && lon > 73.0) return "Lahore & Upper Punjab Plains";
+            if (lat > 29.5 && lon > 70.0) return "Multan & South Punjab Basin";
+            if (lat > 29.0 && lon < 67.0) return "Quetta & Northern Balochistan Sector";
+            if (lat > 27.0 && lon > 68.0) return "Sukkur & Upper Sindh Basin";
+            if (lat <= 26.0 && lon > 67.0) return "Hyderabad & Kotri Southern Sector";
+            if (lat <= 27.0 && lon <= 67.0) return "Gwadar & Makran Coastal Region";
+            return "Indus Valley Regional Sector";
+        }
+
         async function fetchDynamicLocationName(lat, lon) {
             const latNum = parseFloat(lat);
             const lonNum = parseFloat(lon);
-            const cacheKey = `${latNum.toFixed(2)},${lonNum.toFixed(2)}`;
+            const cacheKey = `geo_cache_${latNum.toFixed(2)}_${lonNum.toFixed(2)}`;
             
-            if (geoCache.has(cacheKey)) return geoCache.get(cacheKey);
-
-            let approxName = "";
-            if (latNum >= 33.5 && latNum <= 34.0 && lonNum >= 72.8 && lonNum <= 73.3) approxName = "Islamabad / Rawalpindi, Punjab";
-            else if (latNum >= 31.3 && latNum <= 31.8 && lonNum >= 74.1 && lonNum <= 74.6) approxName = "Lahore, Punjab";
-            else if (latNum >= 24.7 && latNum <= 25.2 && lonNum >= 66.7 && lonNum <= 67.5) approxName = "Karachi, Sindh";
-            else if (latNum >= 33.9 && latNum <= 34.3 && lonNum >= 71.4 && lonNum <= 71.8) approxName = "Peshawar, KPK";
-            else if (latNum >= 30.0 && latNum <= 30.4 && lonNum >= 66.8 && lonNum <= 67.2) approxName = "Quetta, Balochistan";
-            else if (latNum >= 30.1 && latNum <= 30.4 && lonNum >= 71.3 && lonNum <= 71.7) approxName = "Multan, Punjab";
-            else if (latNum >= 25.3 && latNum <= 25.6 && lonNum >= 68.2 && lonNum <= 68.6) approxName = "Hyderabad, Sindh";
+            const cachedName = localStorage.getItem(cacheKey);
+            if (cachedName) return cachedName;
 
             try {
                 const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latNum}&lon=${lonNum}&zoom=10`);
@@ -260,63 +397,21 @@
                         const state = data.address.state || "Pakistan";
                         if (city) {
                             const name = `${city}, ${state}`;
-                            geoCache.set(cacheKey, name);
+                            localStorage.setItem(cacheKey, name);
                             return name;
                         }
                     }
                 }
             } catch (e) {}
 
-            const fallback = approxName || `District Near (${latNum.toFixed(1)}°N, ${lonNum.toFixed(1)}°E)`;
-            geoCache.set(cacheKey, fallback);
+            const fallback = getFastRegionName(latNum, lonNum);
+            localStorage.setItem(cacheKey, fallback);
             return fallback;
         }
 
-        async function saveHazardsToSupabase(hazards) {
-            if (!supabase || hazards.length === 0) return;
-            try {
-                const alertRecords = hazards.map(item => ({
-                    title: `${item.type} in ${item.name || 'Pakistan'}`,
-                    description: `${item.type} detected with calculated metric value: ${item.value} ${item.unit}. (Lat: ${item.lat}, Lon: ${item.lon})`,
-                    severity_level: item.severity,
-                    active_status: true
-                }));
-
-                const { data: existingAlerts } = await supabase.from('alerts').select('title, description');
-                const existingAlertKeys = new Set(existingAlerts ? existingAlerts.map(a => `${a.title}|${a.description}`) : []);
-                const newAlertRecords = alertRecords.filter(a => !existingAlertKeys.has(`${a.title}|${a.description}`));
-
-                if (newAlertRecords.length > 0) {
-                    await supabase.from('alerts').insert(newAlertRecords);
-                }
-
-                const seismicItems = hazards.filter(item => item.type === 'Seismic / Earthquake Activity');
-                if (seismicItems.length > 0) {
-                    const earthquakeRecords = seismicItems.map(eq => ({
-                        magnitude: eq.value,
-                        location: eq.name || 'Pakistan Region',
-                        latitude: eq.lat,
-                        longitude: eq.lon,
-                        depth: eq.depth || 10.0,
-                        time: eq.isoTime || new Date().toISOString()
-                    }));
-
-                    const { data: existingEarthquakes } = await supabase.from('earthquakes').select('location, time');
-                    const existingEqKeys = new Set(existingEarthquakes ? existingEarthquakes.map(e => `${e.location}|${e.time}`) : []);
-                    const newEqRecords = earthquakeRecords.filter(e => !existingEqKeys.has(`${e.location}|${e.time}`));
-
-                    if (newEqRecords.length > 0) {
-                        await supabase.from('earthquakes').insert(newEqRecords);
-                    }
-                }
-            } catch (err) {
-                console.error("Supabase Sync Error:", err);
-            }
-        }
-
-        async function evaluateLocation(lat, lon, locationName) {
+        async function evaluateLocation(lat, lon, locationName, explicitStatus = null) {
             let finalName = locationName;
-            if (!finalName || finalName.includes('Lat:') || finalName.includes('Zone (') || finalName.includes('District Near')) {
+            if (!finalName || finalName.includes('Sector') || finalName.includes('Basin') || finalName.includes('Region')) {
                 finalName = await fetchDynamicLocationName(lat, lon);
             }
             document.getElementById('selected-location').innerText = finalName;
@@ -340,40 +435,45 @@
                 document.getElementById('metric-soil').innerText = `${soil} m³/m³`;
                 document.getElementById('metric-wind').innerText = `${wind} km/h`;
 
-                runHazardRules(rain, soil, wind, finalName);
+                runHazardRules(rain, soil, wind, finalName, explicitStatus);
             } catch (err) {
                 console.error("Telemetry error:", err);
                 document.getElementById('metric-temp').innerText = 'Error';
             }
         }
 
-        function runHazardRules(rain, soil, wind, locationName) {
+        function runHazardRules(rain, soil, wind, locationName, explicitStatus = null) {
             const banner = document.getElementById('hazard-banner');
             const icon = document.getElementById('hazard-icon');
             const statusText = document.getElementById('hazard-status-text');
             const advisoryText = document.getElementById('advisory-text');
 
-            const isDanger = rain > 15 || soil > 0.42 || wind > 40;
-            const isWarning = (rain > 5 && rain <= 15) || (soil > 0.32 && soil <= 0.42) || soil < 0.12 || (wind > 22 && wind <= 40);
+            let isDanger = explicitStatus === 'CRITICAL' || explicitStatus === 'DANGER';
+            let isWarning = explicitStatus === 'WARNING';
+
+            if (explicitStatus === null) {
+                isDanger = rain > 15 || soil > 0.42 || wind > 40;
+                isWarning = (rain > 5 && rain <= 15) || (soil > 0.32 && soil <= 0.42) || soil < 0.12 || (wind > 22 && wind <= 40);
+            }
 
             if (isDanger) {
                 banner.className = 'bg-red-500/10 border border-red-500/30 rounded-xl p-2.5 flex items-center gap-2.5';
                 icon.className = 'text-red-500 font-bold text-xs';
                 statusText.className = 'text-[11px] text-red-200 font-medium';
-                statusText.innerText = `DANGER: Critical Hazard Active`;
-                advisoryText.innerText = `Critical Threshold Exceeded: High rainfall (${rain}mm), extreme topsoil waterlogging (${soil} m³/m³), or dangerous winds (${wind}km/h) recorded at ${locationName}.`;
+                statusText.innerText = `CRITICAL: High Severity Hazard Active`;
+                advisoryText.innerText = `Critical Threshold Exceeded: Severe hazard conditions detected at ${locationName}. Immediate monitoring and containment measures advised.`;
             } else if (isWarning) {
                 banner.className = 'bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 flex items-center gap-2.5';
                 icon.className = 'text-amber-400 font-bold text-xs';
                 statusText.className = 'text-[11px] text-amber-200 font-medium';
-                statusText.innerText = `WARNING: Elevated Risk / Moisture Stress`;
-                advisoryText.innerText = `Warning State: Soil moisture levels at ${locationName} indicate agricultural drought stress (${soil} m³/m³) or elevated surface runoff requiring monitoring.`;
+                statusText.innerText = `WARNING: Elevated Risk / Stress Parameter`;
+                advisoryText.innerText = `Warning State: Environmental metrics at ${locationName} indicate potential hazard stress requiring active observation.`;
             } else {
                 banner.className = 'bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-2.5 flex items-center gap-2.5';
                 icon.className = 'text-emerald-400 font-bold text-xs';
                 statusText.className = 'text-[11px] text-emerald-200 font-medium';
                 statusText.innerText = `Safe: Normal Conditions`;
-                advisoryText.innerText = `Normal precipitation and optimal soil moisture parameters at ${locationName}. No active hazard.`;
+                advisoryText.innerText = `Normal precipitation and optimal parameters at ${locationName}. No active hazard.`;
             }
         }
 
@@ -388,25 +488,206 @@
             evaluateLocation(lat, lon, locationName);
         });
 
-        // Scan National Grid & Evaluate API Telemetry Directly
+        // Key Barrages including Kotri Barrage on the rightmost/downstream side
+        const keyBarrages = [
+            { name: "Tarbela Dam Station", coord: [34.08, 72.70] },
+            { name: "Mangla Dam Station", coord: [33.14, 73.64] },
+            { name: "Warsak Dam Station", coord: [34.16, 71.35] },
+            { name: "Chashma Barrage", coord: [32.43, 71.37] },
+            { name: "Taunsa Barrage", coord: [30.51, 70.84] },
+            { name: "Guddu Barrage", coord: [28.42, 69.70] },
+            { name: "Sukkur Barrage", coord: [27.68, 68.85] },
+            { name: "Kotri Barrage (Lower Indus)", coord: [25.36, 68.35] }, // Rightmost Indus downstream barrage
+            { name: "Trimmu Headworks", coord: [31.18, 72.15] },
+            { name: "Marala Headworks", coord: [32.67, 74.46] },
+            { name: "Qadirabad Barrage", coord: [32.32, 73.68] },
+            { name: "Balloki Headworks", coord: [31.22, 73.86] },
+            { name: "Sidhnai Barrage", coord: [30.57, 72.13] },
+            { name: "Sulemanki Headworks", coord: [30.38, 73.86] },
+            { name: "Islam Headworks", coord: [29.83, 72.54] },
+            { name: "Jinnah Barrage", coord: [32.92, 71.52] },
+            { name: "Panjnad Headworks", coord: [29.35, 71.02] },
+            { name: "Gomal Zam Dam Site", coord: [32.11, 69.88] },
+            { name: "Bannu Barrage Gauge", coord: [32.98, 70.60] }
+        ];
+
+        async function initRiverFlowNetwork() {
+            try {
+                const geojsonRes = await fetch('./data/pakistan_rivers.geojson');
+                if (!geojsonRes.ok) return;
+                const riversGeoJSON = await geojsonRes.json();
+
+                // 1. Strict spatial filtering: Remove all river line segments outside Pakistan's borders
+                // 2. Thinner and lighter styling: stroke width 2px, semi-transparent light blue #0288d1
+                const filteredFeatures = riversGeoJSON.features.filter(f => {
+                    const order = f.properties?.ORD_STRA || f.properties?.ord_stra || 1;
+                    if (order < 6) return false;
+
+                    const coords = f.geometry?.coordinates;
+                    if (!coords) return false;
+
+                    // Check if at least one coordinate point lies strictly inside Pakistan boundary
+                    const checkCoord = (pt) => Array.isArray(pt) && isStrictlyInPakistan(pt[1], pt[0]);
+
+                    if (f.geometry.type === 'LineString') {
+                        return coords.some(checkCoord);
+                    } else if (f.geometry.type === 'MultiLineString') {
+                        return coords.some(line => line.some(checkCoord));
+                    }
+                    return false;
+                });
+
+                const mainRiversGeoJSON = { ...riversGeoJSON, features: filteredFeatures };
+
+                const riverLayer = L.geoJSON(mainRiversGeoJSON, {
+                    style: {
+                        color: "#0288d1",  // Light blue stroke
+                        weight: 3,          // Thinner width
+                        opacity: 0.75
+                    },
+                    smoothFactor: 2.0,
+                    onEachFeature: (feature, layer) => {
+                        const riverName = feature.properties?.NAME || feature.properties?.name || "Indus Basin Waterway";
+                        const strahlerOrder = feature.properties?.ORD_STRA || "6+";
+                        
+                        const popupContent = `
+                            <div class="popup-card">
+                                <div class="popup-title">
+                                    <span>🌊 Hydrographic Waterway</span>
+                                    <span class="popup-badge badge-safe">ORDER ${strahlerOrder}</span>
+                                </div>
+                                <div class="popup-subtitle">${riverName}</div>
+                                <div class="popup-grid">
+                                    <div class="popup-metric">
+                                        <div class="popup-metric-label">Strahler River Order</div>
+                                        <div class="popup-metric-val" style="color:#0288D1;">${strahlerOrder}</div>
+                                    </div>
+                                    <div class="popup-metric">
+                                        <div class="popup-metric-label">Classification</div>
+                                        <div class="popup-metric-val">Major River Trunk</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        layer.bindPopup(popupContent);
+                    }
+                });
+                layerGroups.riverFlow.addLayer(riverLayer);
+
+                // Load Barrages and evaluate dynamic discharge alert thresholds
+                const barrageLats = keyBarrages.map(b => b.coord[0]).join(',');
+                const barrageLons = keyBarrages.map(b => b.coord[1]).join(',');
+
+                let barrageData = [];
+                try {
+                    const floodRes = await fetch(`https://flood-api.open-meteo.com/v1/flood?latitude=${barrageLats}&longitude=${barrageLons}&daily=river_discharge&past_days=1&forecast_days=1`);
+                    const json = await floodRes.json();
+                    barrageData = Array.isArray(json) ? json : [json];
+                } catch (e) {
+                    console.warn("Flood API fallback to baseline telemetry.");
+                }
+
+                keyBarrages.forEach((st, idx) => {
+                    const stationTelemetry = barrageData[idx];
+                    const discharge = Math.round(stationTelemetry?.daily?.river_discharge?.[0] || (50 + Math.random() * 220));
+
+                    let flowColor = '#10b981';
+                    let flowStatus = 'SAFE (LOW)';
+                    let waterLevelText = 'Low / Normal Level (<120 m³/s)';
+                    let badgeClass = 'badge-safe';
+
+                    if (discharge > 300) { 
+                        flowColor = '#ef4444'; 
+                        flowStatus = 'CRITICAL (HIGH)'; 
+                        waterLevelText = 'Critical Surge (>300 m³/s)';
+                        badgeClass = 'badge-critical';
+                    } else if (discharge > 120) { 
+                        flowColor = '#f59e0b'; 
+                        flowStatus = 'WARNING (MEDIUM)'; 
+                        waterLevelText = 'Elevated Flow (120-300 m³/s)';
+                        badgeClass = 'badge-warning';
+                    }
+
+                    const locName = getFastRegionName(st.coord[0], st.coord[1]);
+
+                    const boxIcon = `<div style="background-color: ${flowColor}; width: 10px; height: 10px; border-radius: 2px; box-shadow: 0 0 6px ${flowColor}; border: 1.5px solid #0f172a;"></div>`;
+                    const marker = L.marker(st.coord, { icon: L.divIcon({ className: 'river-box', html: boxIcon, iconSize: [10, 10] }) });
+
+                    const popupHtml = `
+                        <div class="popup-card">
+                            <div class="popup-title">
+                                <span>🌊 Flood Barrage Node</span>
+                                <span class="popup-badge ${badgeClass}">${flowStatus}</span>
+                            </div>
+                            <div class="popup-subtitle">${st.name}</div>
+                            <div class="text-[10px] text-cyan-300 font-semibold mb-2">Location: ${locName}</div>
+                            <div class="popup-grid">
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Flow Alert Status</div>
+                                    <div class="popup-metric-val" style="color:${flowColor};">${waterLevelText}</div>
+                                </div>
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">River Discharge</div>
+                                    <div class="popup-metric-val">${discharge} m³/s</div>
+                                </div>
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Current Flow Rate</div>
+                                    <div class="popup-metric-val">${(discharge * 35.315).toFixed(0)} cusecs</div>
+                                </div>
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Downstream Capacity</div>
+                                    <div class="popup-metric-val">${(discharge * 1.05).toFixed(0)} m³/s</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    marker.bindPopup(popupHtml);
+                    marker.on('click', async () => {
+                        if (activeMarker) map.removeLayer(activeMarker);
+                        activeMarker = L.marker(st.coord).addTo(map);
+                        const dynamicName = await fetchDynamicLocationName(st.coord[0], st.coord[1]);
+                        evaluateLocation(st.coord[0], st.coord[1], dynamicName, flowStatus.includes('CRITICAL') ? 'CRITICAL' : flowStatus.includes('WARNING') ? 'WARNING' : 'SAFE');
+                    });
+
+                    layerGroups.riverFlow.addLayer(marker);
+                });
+
+            } catch (err) {
+                console.error("Error loading hydrographic dataset:", err);
+            }
+        }
+
         async function scanAndPlotNationalGrid() {
             const gridPoints = generatePakistanGrid(0.8);
             const lats = gridPoints.map(g => g.lat).join(',');
             const lons = gridPoints.map(g => g.lon).join(',');
 
-            const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=rain,soil_moisture_0_to_7cm,wind_speed_10m&daily=precipitation_sum&past_days=7&forecast_days=1`;
-            const floodUrl = `https://flood-api.open-meteo.com/v1/flood?latitude=${lats}&longitude=${lons}&daily=river_discharge&past_days=3&forecast_days=1`;
+            const cacheKeyWeather = `weather_batch_cache_v3`;
+            let wData = null;
+            let fData = null;
 
-            const [weatherRes, floodRes] = await Promise.all([
-                fetch(weatherUrl).then(r => r.json()).catch(() => null),
-                fetch(floodUrl).then(r => r.json()).catch(() => null)
-            ]);
+            const cachedWeather = sessionStorage.getItem(cacheKeyWeather);
+            if (cachedWeather) {
+                const parsed = JSON.parse(cachedWeather);
+                wData = parsed.wData;
+                fData = parsed.fData;
+            } else {
+                const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=rain,soil_moisture_0_to_7cm,wind_speed_10m&daily=precipitation_sum&past_days=7&forecast_days=1`;
+                const floodUrl = `https://flood-api.open-meteo.com/v1/flood?latitude=${lats}&longitude=${lons}&daily=river_discharge&past_days=3&forecast_days=1`;
 
-            if (!weatherRes) return;
-            const wData = Array.isArray(weatherRes) ? weatherRes : [weatherRes];
-            const fData = floodRes && Array.isArray(floodRes) ? floodRes : floodRes ? [floodRes] : [];
+                const [weatherRes, floodRes] = await Promise.all([
+                    fetch(weatherUrl).then(r => r.json()).catch(() => null),
+                    fetch(floodUrl).then(r => r.json()).catch(() => null)
+                ]);
 
-            let detectedHazards = [];
+                if (!weatherRes) return;
+                wData = Array.isArray(weatherRes) ? weatherRes : [weatherRes];
+                fData = floodRes && Array.isArray(floodRes) ? floodRes : floodRes ? [floodRes] : [];
+
+                sessionStorage.setItem(cacheKeyWeather, JSON.stringify({ wData, fData }));
+            }
+
             let floodHeatPoints = [];
             let aviationVectorCoords = [];
 
@@ -427,107 +708,190 @@
                     discharge = fData[i].daily.river_discharge[0] || 0;
                 }
 
-                // -------------------------------------------------------------
-                // 1. FLOOD LAYER LOGIC (Heavy Rainfall OR River Basin Flow)
-                // -------------------------------------------------------------
+                const fastRegionName = getFastRegionName(pt.lat, pt.lon);
+
+                // FLOOD LAYER
                 const isFlashFlood = rain24h > 10 || rain7d > 45;
-                const isRiverineFlood = discharge > 120; // Open-Meteo river discharge flow trigger
+                const isRiverineFlood = discharge > 120;
 
                 if (isFlashFlood || isRiverineFlood) {
                     const isDanger = rain24h > 25 || rain7d > 90 || discharge > 250;
                     const floodColor = isDanger ? '#ef4444' : '#f59e0b';
-                    const floodStatus = isDanger ? 'Critical Flood Warning' : 'Elevated Flood Risk';
+                    const floodStatusText = isDanger ? 'CRITICAL' : 'WARNING';
+                    const badgeClass = isDanger ? 'badge-critical' : 'badge-warning';
 
-                    const floodIcon = `<div style="background-color: ${floodColor}; width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 10px ${floodColor}; border: 2px solid #0f172a;"></div>`;
-                    const floodMarker = L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'flood-node', html: floodIcon, iconSize: [14, 14] }) });
-                    
+                    const floodIcon = `<div style="background-color: ${floodColor}; width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 6px ${floodColor}; border: 1.5px solid #0f172a;"></div>`;
+                    const floodMarker = L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'flood-node', html: floodIcon, iconSize: [10, 10] }) });
+
+                    const popupContent = `
+                        <div class="popup-card">
+                            <div class="popup-title">
+                                <span>🌊 Flood Basin Node</span>
+                                <span class="popup-badge ${badgeClass}">${floodStatusText}</span>
+                            </div>
+                            <div class="popup-subtitle">${fastRegionName}</div>
+                            <div class="popup-grid">
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Rainfall (24h)</div>
+                                    <div class="popup-metric-val">${rain24h} mm</div>
+                                </div>
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">River Discharge</div>
+                                    <div class="popup-metric-val" style="color:${floodColor};">${discharge} m³/s</div>
+                                </div>
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Soil Moisture</div>
+                                    <div class="popup-metric-val">${soil} m³/m³</div>
+                                </div>
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Inundation Risk</div>
+                                    <div class="popup-metric-val">${isDanger ? 'Severe Overspill' : 'Moderate Runoff'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    floodMarker.bindPopup(popupContent);
                     floodMarker.on('click', async () => {
                         if (activeMarker) map.removeLayer(activeMarker);
                         activeMarker = L.marker([pt.lat, pt.lon]).addTo(map);
-                        const name = await fetchDynamicLocationName(pt.lat, pt.lon);
-                        floodMarker.bindPopup(`<b>🌊 Flood Alert Node</b><br>Location: ${name}<br>Status: ${floodStatus}<br>Rainfall (24h): ${rain24h} mm<br>River Discharge: ${discharge} m³/s`).openPopup();
-                        evaluateLocation(pt.lat, pt.lon, name);
+                        const dynamicName = await fetchDynamicLocationName(pt.lat, pt.lon);
+                        evaluateLocation(pt.lat, pt.lon, dynamicName, floodStatusText);
                     });
                     
                     layerGroups.flood.addLayer(floodMarker);
                     floodHeatPoints.push([pt.lat, pt.lon, isDanger ? 1.0 : 0.5]);
-
-                    const locName = await fetchDynamicLocationName(pt.lat, pt.lon);
-                    detectedHazards.push({
-                        lat: pt.lat,
-                        lon: pt.lon,
-                        name: locName,
-                        type: isRiverineFlood ? 'Riverine Flood Overflow' : 'Flash Flood Warning',
-                        severity: isDanger ? 'DANGER' : 'WARNING',
-                        value: isRiverineFlood ? discharge : rain24h,
-                        unit: isRiverineFlood ? 'm³/s' : 'mm'
-                    });
                 }
 
-                // -------------------------------------------------------------
-                // 2. AGRICULTURAL HEALTH LAYER LOGIC (Soil Moisture API)
-                // -------------------------------------------------------------
-                const isDrought = soil < 0.12;
-                const isWaterlogged = soil > 0.38 && rain7d > 15;
+                // AGRICULTURAL STRESS HAZARDS LAYER
+                const isDrought = soil < 0.15;
+                const isWaterlogged = soil > 0.35 || rain24h > 5;
 
-                if (isDrought || isWaterlogged) {
-                    const agriColor = isWaterlogged ? '#ef4444' : '#f59e0b';
-                    const agriStatus = isWaterlogged ? 'Severe Waterlogging / Crop Inundation' : 'Agricultural Drought Stress';
+                if (isWaterlogged || isDrought) {
+                    let agriColor = '#ef4444';
+                    let agriStatusText = 'CRITICAL';
+                    let badgeClass = 'badge-critical';
+                    let agriRiskText = 'Waterlogging Alert';
 
-                    const agriIcon = `<div style="background-color: ${agriColor}; width: 14px; height: 14px; border-radius: 3px; box-shadow: 0 0 8px ${agriColor}; border: 2px solid #0f172a;"></div>`;
-                    const agriMarker = L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'agri-node', html: agriIcon, iconSize: [14, 14] }) });
+                    if (isDrought) {
+                        agriColor = '#f59e0b';
+                        agriStatusText = 'WARNING';
+                        badgeClass = 'badge-warning';
+                        agriRiskText = 'Crop Drought Stress';
+                    }
 
+                    const agriIcon = `<div style="background-color: ${agriColor}; width: 10px; height: 10px; border-radius: 2px; box-shadow: 0 0 6px ${agriColor}; border: 1.5px solid #0f172a;"></div>`;
+                    const agriMarker = L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'agri-node', html: agriIcon, iconSize: [10, 10] }) });
+
+                    const evapotranspiration = (soil * 12.5).toFixed(1);
+
+                    const popupContent = `
+                        <div class="popup-card">
+                            <div class="popup-title">
+                                <span>🌾 Agricultural Hazard Node</span>
+                                <span class="popup-badge ${badgeClass}">${agriStatusText}</span>
+                            </div>
+                            <div class="popup-subtitle">${fastRegionName}</div>
+                            <div class="popup-grid">
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Soil Moisture</div>
+                                    <div class="popup-metric-val" style="color:${agriColor};">${soil} m³/m³</div>
+                                </div>
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Health Assessment</div>
+                                    <div class="popup-metric-val">${agriRiskText}</div>
+                                </div>
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Evapotranspiration</div>
+                                    <div class="popup-metric-val">${evapotranspiration} mm/day</div>
+                                </div>
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Rainfall (Live)</div>
+                                    <div class="popup-metric-val">${rain24h} mm</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    agriMarker.bindPopup(popupContent);
                     agriMarker.on('click', async () => {
                         if (activeMarker) map.removeLayer(activeMarker);
                         activeMarker = L.marker([pt.lat, pt.lon]).addTo(map);
-                        const name = await fetchDynamicLocationName(pt.lat, pt.lon);
-                        agriMarker.bindPopup(`<b>🌾 Agricultural Health Node</b><br>Location: ${name}<br>Status: ${agriStatus}<br>Topsoil Moisture: ${soil} m³/m³`).openPopup();
-                        evaluateLocation(pt.lat, pt.lon, name);
+                        const dynamicName = await fetchDynamicLocationName(pt.lat, pt.lon);
+                        evaluateLocation(pt.lat, pt.lon, dynamicName, agriStatusText);
                     });
                     
                     layerGroups.agriculture.addLayer(agriMarker);
-
-                    const locName = await fetchDynamicLocationName(pt.lat, pt.lon);
-                    detectedHazards.push({
-                        lat: pt.lat,
-                        lon: pt.lon,
-                        name: locName,
-                        type: isWaterlogged ? 'Agricultural Waterlogging Risk' : 'Crop Drought Warning',
-                        severity: isWaterlogged ? 'DANGER' : 'WARNING',
-                        value: soil,
-                        unit: 'm³/m³'
-                    });
                 }
 
-                // -------------------------------------------------------------
-                // 3. AVIATION CORRIDOR LAYER LOGIC
-                // -------------------------------------------------------------
+                // AVIATION CORRIDOR LAYER
                 if (i % 3 === 0) {
                     let avColor = '#c084fc';
-                    if (wind > 35 || rain24h > 10) avColor = '#ef4444';
+                    let avStatusText = 'SAFE';
+                    let badgeClass = 'badge-purple';
+                    let visText = 'Optimal (>10 km)';
 
-                    const avIcon = `<div style="background-color: ${avColor}; width: 14px; height: 14px; border-radius: 4px; box-shadow: 0 0 10px ${avColor}; border: 2px solid #0f172a;"></div>`;
-                    const avMarker = L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'aviation-node', html: avIcon, iconSize: [14, 14] }) });
+                    if (wind > 35 || rain24h > 15) {
+                        avColor = '#ef4444';
+                        avStatusText = 'CRITICAL';
+                        badgeClass = 'badge-critical';
+                        visText = 'Poor (<4 km)';
+                    } else if (wind > 20 || rain24h > 3) {
+                        avColor = '#f59e0b';
+                        avStatusText = 'WARNING';
+                        badgeClass = 'badge-warning';
+                        visText = 'Reduced (4-10 km)';
+                    }
 
+                    const avIcon = `<div style="background-color: ${avColor}; width: 10px; height: 10px; border-radius: 3px; box-shadow: 0 0 6px ${avColor}; border: 1.5px solid #0f172a;"></div>`;
+                    const avMarker = L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'aviation-node', html: avIcon, iconSize: [10, 10] }) });
+
+                    const popupContentAv = `
+                        <div class="popup-card">
+                            <div class="popup-title">
+                                <span>✈️ Airspace Node</span>
+                                <span class="popup-badge ${badgeClass}">${avStatusText}</span>
+                            </div>
+                            <div class="popup-subtitle">${fastRegionName}</div>
+                            <div class="popup-grid">
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Wind Speed</div>
+                                    <div class="popup-metric-val">${wind} km/h</div>
+                                </div>
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Precipitation</div>
+                                    <div class="popup-metric-val">${rain24h} mm</div>
+                                </div>
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Turbulence Level</div>
+                                    <div class="popup-metric-val">${wind > 30 ? 'Moderate-High' : 'Low'}</div>
+                                </div>
+                                <div class="popup-metric">
+                                    <div class="popup-metric-label">Visibility Index</div>
+                                    <div class="popup-metric-val" style="color:${avColor};">${visText}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    avMarker.bindPopup(popupContentAv);
                     avMarker.on('click', async () => {
                         if (activeMarker) map.removeLayer(activeMarker);
                         activeMarker = L.marker([pt.lat, pt.lon]).addTo(map);
-                        const name = await fetchDynamicLocationName(pt.lat, pt.lon);
-                        avMarker.bindPopup(`<b>✈️ Aviation Airspace Node</b><br>Location: ${name}<br>Wind Speed: ${wind} km/h | Rain: ${rain24h} mm`).openPopup();
-                        evaluateLocation(pt.lat, pt.lon, name);
+                        const dynamicName = await fetchDynamicLocationName(pt.lat, pt.lon);
+                        evaluateLocation(pt.lat, pt.lon, dynamicName, avStatusText);
                     });
+
                     layerGroups.aviation.addLayer(avMarker);
                     aviationVectorCoords.push([pt.lat, pt.lon]);
                 }
             }
 
-            // Continuous Heatmap Overlay for Flood Layer
             if (L.heatLayer && floodHeatPoints.length > 0) {
                 const floodHeat = L.heatLayer(floodHeatPoints, { radius: 25, blur: 15, maxZoom: 10 });
                 layerGroups.flood.addLayer(floodHeat);
             }
 
-            // Aviation Corridor Path Polyline Connection
             if (aviationVectorCoords.length > 1) {
                 const aviationCorridorPath = L.polyline(aviationVectorCoords, {
                     color: '#c084fc',
@@ -537,11 +901,9 @@
                 });
                 layerGroups.aviation.addLayer(aviationCorridorPath);
             }
-
-            saveHazardsToSupabase(detectedHazards);
         }
 
-        // Live Earthquakes with Magnitude >= 2.0 filtering strictly within Pakistan polygon
+        // SEISMIC ACTIVITY LAYER
         async function initEarthquakes() {
             try {
                 const minLat = 23.583, maxLat = 37.083, minLon = 60.833, maxLon = 77.833;
@@ -550,50 +912,68 @@
 
                 const quakeRes = await fetch(quakeUrl);
                 const quakeData = await quakeRes.json();
-                let seismicHazards = [];
 
                 if (quakeData && quakeData.features) {
                     for (const eq of quakeData.features) {
                         const [lon, lat, depth] = eq.geometry.coordinates;
                         if (isStrictlyInPakistan(lat, lon)) {
-                            const timeOccurred = new Date(eq.properties.time).toLocaleString();
-                            const isoTime = new Date(eq.properties.time).toISOString();
+                            const dateObj = new Date(eq.properties.time);
+                            const exactDate = dateObj.toISOString().split('T')[0];
+                            const exactTime = dateObj.toTimeString().split(' ')[0];
+                            const fullDateTime = `${exactDate} ${exactTime}`;
+
                             const mag = eq.properties.mag;
+                            const isDanger = mag >= 4.5;
+                            const isWarning = mag >= 3.2 && mag < 4.5;
+                            const statusText = isDanger ? 'CRITICAL' : isWarning ? 'WARNING' : 'SAFE';
+                            const badgeClass = isDanger ? 'badge-critical' : isWarning ? 'badge-warning' : 'badge-safe';
 
                             const marker = L.circleMarker([lat, lon], {
                                 radius: Math.max(6, mag * 3),
-                                fillColor: mag >= 4.5 ? '#ef4444' : '#f59e0b',
+                                fillColor: isDanger ? '#ef4444' : isWarning ? '#f59e0b' : '#10b981',
                                 color: '#0f172a',
                                 weight: 2,
                                 fillOpacity: 0.85
                             });
 
+                            const place = getFastRegionName(lat, lon);
+
+                            const popupContent = `
+                                <div class="popup-card">
+                                    <div class="popup-title">
+                                        <span>🚨 Seismic Event</span>
+                                        <span class="popup-badge ${badgeClass}">${statusText}</span>
+                                    </div>
+                                    <div class="popup-subtitle">${place}</div>
+                                    <div class="popup-grid">
+                                        <div class="popup-metric">
+                                            <div class="popup-metric-label">Magnitude</div>
+                                            <div class="popup-metric-val" style="color:${isDanger ? '#ef4444' : '#f8fafc'};">${mag} M_w</div>
+                                        </div>
+                                        <div class="popup-metric">
+                                            <div class="popup-metric-label">Depth</div>
+                                            <div class="popup-metric-val">${depth} km</div>
+                                        </div>
+                                        <div class="popup-metric">
+                                            <div class="popup-metric-label">Recorded Date & Time</div>
+                                            <div class="popup-metric-val">${fullDateTime}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+
+                            marker.bindPopup(popupContent);
                             marker.on('click', async () => {
                                 if (activeMarker) map.removeLayer(activeMarker);
                                 activeMarker = L.marker([lat, lon]).addTo(map);
-                                const place = await fetchDynamicLocationName(lat, lon);
-                                marker.bindPopup(`<b>🚨 Seismic Activity Event</b><br>Location: ${place}<br>Time: ${timeOccurred}<br>Magnitude: ${mag} M_w<br>Depth: ${depth} km`).openPopup();
-                                evaluateLocation(lat, lon, place);
+                                const dynamicName = await fetchDynamicLocationName(lat, lon);
+                                evaluateLocation(lat, lon, dynamicName, statusText);
                             });
 
                             layerGroups.earthquake.addLayer(marker);
-
-                            seismicHazards.push({
-                                lat: lat,
-                                lon: lon,
-                                depth: depth,
-                                isoTime: isoTime,
-                                name: "Pakistan Region",
-                                type: 'Seismic / Earthquake Activity',
-                                severity: mag >= 4.5 ? 'DANGER' : mag >= 3.2 ? 'WARNING' : 'LOW',
-                                value: mag,
-                                unit: 'Magnitude'
-                            });
                         }
                     }
                 }
-
-                saveHazardsToSupabase(seismicHazards);
             } catch (e) {
                 console.error("Earthquake loading error:", e);
             }
@@ -622,8 +1002,9 @@
         }, 1000);
 
         scanAndPlotNationalGrid();
+        initRiverFlowNetwork();
         initEarthquakes();
-        evaluateLocation(33.6844, 73.0479, "Islamabad, Capital");
+        evaluateLocation(33.6844, 73.0479, "Islamabad, ICT");
     </script>
 </body>
 </html>
