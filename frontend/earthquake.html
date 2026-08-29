@@ -34,26 +34,27 @@
                         url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=2000&q=80') no-repeat center center fixed;
             background-size: cover;
             color: var(--text-main);
-            min-height: 100vh;
-            padding-bottom: 40px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         header {
             background: var(--card-bg);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--card-border);
-            padding: 16px 35px;
+            padding: 12px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
-            top: 0;
+            flex-shrink: 0;
             z-index: 1000;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
 
         header h1 {
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -68,10 +69,10 @@
             background: rgba(43, 58, 103, 0.8);
             border: 1px solid var(--card-border);
             color: var(--text-main);
-            padding: 7px 14px;
+            padding: 6px 12px;
             border-radius: 6px;
             text-decoration: none;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 500;
             transition: all 0.2s;
             display: flex;
@@ -85,24 +86,30 @@
         }
 
         .dashboard-container {
-            max-width: 1450px;
-            margin: 25px auto;
-            padding: 0 25px;
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 15px auto;
+            padding: 0 20px;
             display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 25px;
-            align-items: start;
+            grid-template-columns: 1.15fr 1fr;
+            gap: 20px;
+            align-items: stretch;
+            overflow: hidden;
         }
 
         .left-column {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .right-column {
-            position: sticky;
-            top: 85px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
         }
 
         .map-card {
@@ -110,24 +117,30 @@
             backdrop-filter: blur(10px);
             border: 1px solid var(--card-border);
             border-radius: 12px;
-            padding: 16px;
+            padding: 14px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
         }
 
         .map-card h3 {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 6px;
+            flex-shrink: 0;
         }
 
         #map {
+            flex: 1;
             width: 100%;
-            height: 560px;
+            min-height: 0;
             border-radius: 8px;
             border: 1px solid var(--card-border);
             z-index: 10;
@@ -138,11 +151,15 @@
             gap: 10px;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: nowrap;
+            width: 100%;
+            flex-shrink: 0;
         }
 
         .toggle-group {
             display: flex;
             gap: 8px;
+            flex-shrink: 0;
         }
 
         .toggle-btn {
@@ -150,12 +167,13 @@
             backdrop-filter: blur(10px);
             border: 1px solid var(--card-border);
             color: var(--text-muted);
-            padding: 9px 14px;
+            padding: 8px 12px;
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 0.78rem;
+            font-size: 0.75rem;
+            white-space: nowrap;
         }
 
         .toggle-btn.active {
@@ -165,23 +183,53 @@
             box-shadow: 0 0 15px rgba(0, 180, 216, 0.4);
         }
 
-        .source-indicator {
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
+            flex-shrink: 0;
+        }
+
+        .time-dropdown {
+            background: #1c254d;
+            border: 1px solid var(--card-border);
+            color: #ffffff;
+            padding: 8px 10px;
+            border-radius: 8px;
             font-size: 0.75rem;
-            color: var(--accent-emerald);
-            background: rgba(46, 196, 182, 0.1);
-            border: 1px solid rgba(46, 196, 182, 0.3);
-            padding: 6px 12px;
-            border-radius: 6px;
             font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+            display: inline-block !important;
+            color-scheme: dark;
+        }
+
+        .time-dropdown option {
+            background-color: #1c254d;
+            color: #ffffff;
+            padding: 8px;
+        }
+
+        .time-dropdown:hover {
+            border-color: var(--primary-blue);
+        }
+
+        .time-dropdown.active {
+            border-color: var(--primary-blue);
+            background: rgba(0, 180, 216, 0.25);
+            box-shadow: 0 0 12px rgba(0, 180, 216, 0.35);
         }
 
         .quake-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            max-height: 74vh;
+            gap: 10px;
+            flex: 1;
             overflow-y: auto;
             padding-right: 4px;
+            min-height: 0;
         }
 
         .quake-list::-webkit-scrollbar {
@@ -197,14 +245,15 @@
             backdrop-filter: blur(8px);
             border: 1px solid var(--card-border);
             border-radius: 10px;
-            padding: 14px 18px;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 15px;
+            gap: 12px;
             transition: all 0.2s;
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            flex-shrink: 0;
         }
 
         .quake-card:hover {
@@ -214,15 +263,15 @@
         }
 
         .quake-badge {
-            min-width: 55px;
-            height: 55px;
+            min-width: 50px;
+            height: 50px;
             border-radius: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 1.05rem;
+            font-size: 1rem;
         }
 
         .mag-low { background: rgba(46, 196, 182, 0.15); color: var(--accent-emerald); border: 1px solid rgba(46, 196, 182, 0.4); }
@@ -230,7 +279,7 @@
         .mag-high { background: rgba(239, 35, 60, 0.15); color: var(--accent-rose); border: 1px solid rgba(239, 35, 60, 0.4); }
 
         .quake-badge span {
-            font-size: 0.5rem;
+            font-size: 0.48rem;
             text-transform: uppercase;
             font-weight: 700;
             letter-spacing: 0.5px;
@@ -240,7 +289,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
         }
 
         .quake-location-row {
@@ -251,15 +300,15 @@
         }
 
         .quake-location {
-            font-size: 0.92rem;
+            font-size: 0.88rem;
             font-weight: 600;
             color: var(--text-main);
         }
 
         .intensity-pill {
-            padding: 2px 8px;
+            padding: 2px 7px;
             border-radius: 10px;
-            font-size: 0.62rem;
+            font-size: 0.6rem;
             font-weight: 700;
             text-transform: uppercase;
         }
@@ -271,18 +320,18 @@
         .quake-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
             color: var(--text-muted);
-            font-size: 0.78rem;
+            font-size: 0.75rem;
         }
 
         .details-btn {
             background: rgba(46, 196, 182, 0.15);
             border: 1px solid rgba(46, 196, 182, 0.4);
             color: var(--accent-emerald);
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 6px;
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -313,11 +362,11 @@
             background: #111827;
             border: 1px solid var(--card-border);
             width: 100%;
-            max-width: 900px;
+            max-width: 850px;
             border-radius: 14px;
-            padding: 25px;
+            padding: 22px;
             position: relative;
-            max-height: 92vh;
+            max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
             text-align: left;
@@ -326,19 +375,19 @@
 
         .modal-close {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 18px;
+            right: 18px;
             background: #1f2937;
             border: 1px solid var(--card-border);
             color: var(--text-muted);
-            width: 32px;
-            height: 32px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .modal-close:hover {
@@ -348,26 +397,26 @@
 
         .modal-article-header {
             border-bottom: 1px solid var(--card-border);
-            padding-bottom: 14px;
-            margin-bottom: 16px;
+            padding-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .modal-article-header h2 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: var(--text-main);
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
         .modal-article-header p {
             color: var(--text-muted);
-            font-size: 0.78rem;
+            font-size: 0.75rem;
         }
 
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         .metric-box {
@@ -379,7 +428,7 @@
 
         .metric-box span {
             display: block;
-            font-size: 0.65rem;
+            font-size: 0.62rem;
             color: var(--text-muted);
             margin-bottom: 2px;
             text-transform: uppercase;
@@ -387,7 +436,7 @@
         }
 
         .metric-box strong {
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             color: var(--text-main);
         }
 
@@ -395,65 +444,63 @@
             background: #1f2937;
             border: 1px solid var(--card-border);
             border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 16px;
-            height: 210px;
+            padding: 10px;
+            margin-bottom: 14px;
+            height: 190px;
             position: relative;
         }
 
         .info-notes-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: 10px;
         }
 
         .info-note-card {
             background: #1f2937;
             border: 1px solid var(--card-border);
             border-radius: 8px;
-            padding: 12px;
+            padding: 10px 12px;
         }
 
         .info-note-card h4 {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             color: var(--primary-blue);
             text-transform: uppercase;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
         .info-note-card p {
-            font-size: 0.76rem;
+            font-size: 0.73rem;
             color: var(--text-muted);
-            line-height: 1.4;
+            line-height: 1.35;
         }
 
         .loading-state, .empty-state {
             text-align: center;
-            padding: 40px;
+            padding: 30px;
             color: var(--text-muted);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
-        @media (max-width: 992px) {
+        @media (max-width: 1024px) {
+            body {
+                height: auto;
+                overflow: auto;
+            }
             .dashboard-container {
                 grid-template-columns: 1fr;
+                height: auto;
+                overflow: visible;
             }
             .right-column {
-                position: relative;
-                top: 0;
+                height: 450px;
             }
-            #map {
-                height: 380px;
-            }
-            .metrics-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .info-notes-grid {
-                grid-template-columns: 1fr;
+            .quake-list {
+                max-height: 550px;
             }
         }
     </style>
@@ -469,15 +516,25 @@
         <div class="left-column">
             <div class="controls-row">
                 <div class="toggle-group">
-                    <button class="toggle-btn active" id="btn-recent" onclick="switchTab('recent')">Live Feed (Recent)</button>
+                    <button class="toggle-btn active" id="btn-recent" onclick="switchTab('recent')">Live Feed </button>
                     <button class="toggle-btn" id="btn-historic" onclick="switchTab('historic')">Major Archive (M ≥ 5.0)</button>
                 </div>
-                <div class="source-indicator" id="sourceStatus">Loading Feed...</div>
+                <div class="filter-group">
+                    <select id="timeDropdown" class="time-dropdown" onchange="onTimeDropdownChange()">
+                        <option value="" disabled selected>Select Timeframe...</option>
+                        <option value="1month">Within 1 Month</option>
+                        <option value="2months">Within 2 Months</option>
+                        <option value="3months">Within 3 Months</option>
+                        <option value="4months">Within 4 Months</option>
+                        <option value="5months">Within 5 Months</option>
+                    </select>
+                    <input type="date" id="specificDateInput" class="time-dropdown" title="Search specific date" onchange="onSpecificDateChange()">
+                </div>
             </div>
 
             <div id="earthquake-container" class="quake-list">
                 <div class="loading-state">
-                    <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary-blue); font-size: 1.4rem; margin-bottom: 8px;"></i>
+                    <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary-blue); font-size: 1.3rem; margin-bottom: 6px;"></i>
                     <p>Fetching Pakistan seismic records...</p>
                 </div>
             </div>
@@ -511,12 +568,8 @@
                     <strong id="modalDepthVal">0 km</strong>
                 </div>
                 <div class="metric-box">
-                    <span>Casualties Risk</span>
-                    <strong id="modalRiskVal" style="color: var(--accent-emerald);">Low</strong>
-                </div>
-                <div class="metric-box">
-                    <span>Data Source</span>
-                    <strong id="modalSourceType" style="color: var(--primary-blue);">USGS Live</strong>
+                    <span>Energy Release (TNT Equiv.)</span>
+                    <strong id="modalEnergyVal" style="color: var(--accent-amber);">0 Tons</strong>
                 </div>
             </div>
 
@@ -527,7 +580,7 @@
             <div class="info-notes-grid">
                 <div class="info-note-card">
                     <h4><i class="fa-solid fa-chart-bar"></i> Parameter Explanations</h4>
-                    <p>• <b>Depth</b>: Hypocenter depth below Earth's surface.<br>• <b>Magnitude Scale</b>: Richter scale multiplier equivalent.<br>• <b>Energy Index</b>: Logarithmic seismic energy release metric.<br>• <b>Tectonic Factor</b>: Crustal stress coefficient.</p>
+                    <p>• <b>Depth</b>: Hypocenter depth below Earth's surface.<br>• <b>Magnitude Scale</b>: Richter scale multiplier equivalent.<br>• <b>Energy Index</b>: Logarithmic seismic energy release metric.</p>
                 </div>
                 <div class="info-note-card">
                     <h4><i class="fa-solid fa-shield-halved"></i> Safety & Protocol</h4>
@@ -540,7 +593,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
     <script>
-        let currentMode = 'recent';
+        let activeFilterType = 'tab'; // 'tab', 'timeframe', 'date'
+        let currentTabMode = 'recent'; // 'recent' or 'historic'
         let map;
         let markersLayer;
         let activeChart = null;
@@ -572,37 +626,94 @@
         }
 
         function switchTab(mode) {
-            currentMode = mode;
+            activeFilterType = 'tab';
+            currentTabMode = mode;
+
+            // Clear timeframe dropdown and specific date input selections
+            document.getElementById('timeDropdown').value = '';
+            document.getElementById('timeDropdown').classList.remove('active');
+            document.getElementById('specificDateInput').value = '';
+
+            // Update tab button visual active state
             document.getElementById('btn-recent').classList.toggle('active', mode === 'recent');
             document.getElementById('btn-historic').classList.toggle('active', mode === 'historic');
             
-            loadSeismicData(mode);
+            loadSeismicData();
         }
 
-        async function loadSeismicData(type) {
+        function onTimeDropdownChange() {
+            activeFilterType = 'timeframe';
+            document.getElementById('specificDateInput').value = '';
+            
+            // Deactivate tab buttons since timeframe filter is now independently active
+            document.getElementById('btn-recent').classList.remove('active');
+            document.getElementById('btn-historic').classList.remove('active');
+
+            const dropdown = document.getElementById('timeDropdown');
+            if (dropdown.value) {
+                dropdown.classList.add('active');
+            }
+            
+            loadSeismicData();
+        }
+
+        function onSpecificDateChange() {
+            activeFilterType = 'date';
+            
+            // Clear timeframe dropdown selection and deactivate tab buttons
+            document.getElementById('timeDropdown').value = '';
+            document.getElementById('timeDropdown').classList.remove('active');
+            document.getElementById('btn-recent').classList.remove('active');
+            document.getElementById('btn-historic').classList.remove('active');
+
+            loadSeismicData();
+        }
+
+        async function loadSeismicData() {
             const container = document.getElementById('earthquake-container');
-            const statusEl = document.getElementById('sourceStatus');
+            const specificDateVal = document.getElementById('specificDateInput').value;
+            const timeVal = document.getElementById('timeDropdown').value;
             
             container.innerHTML = `
                 <div class="loading-state">
-                    <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary-blue); font-size: 1.4rem; margin-bottom: 8px;"></i>
-                    <p>Retrieving earthquake feeds...</p>
+                    <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary-blue); font-size: 1.3rem; margin-bottom: 6px;"></i>
+                    <p>Retrieving earthquake records...</p>
                 </div>
             `;
 
             let quakes = [];
-            let dataSourceText = '';
 
             try {
-                // Past 5 months for recent, since 2000 for historic
                 let url = '';
-                if (type === 'recent') {
-                    const fiveMonthsAgo = new Date();
-                    fiveMonthsAgo.setMonth(fiveMonthsAgo.getMonth() - 5);
-                    const startDateStr = fiveMonthsAgo.toISOString().split('T')[0];
-                    url = `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${startDateStr}&minmagnitude=2.5&minlatitude=23.5&maxlatitude=37.5&minlongitude=60.5&maxlongitude=78.0&orderby=time&limit=60`;
+                let minMag = '2.5';
+
+                if (activeFilterType === 'date' && specificDateVal) {
+                    const nextDay = new Date(specificDateVal);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    const nextDayStr = nextDay.toISOString().split('T')[0];
+                    url = `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${specificDateVal}&endtime=${nextDayStr}&minmagnitude=${minMag}&minlatitude=23.5&maxlatitude=37.5&minlongitude=60.5&maxlongitude=78.0&orderby=time`;
+                } else if (activeFilterType === 'timeframe' && timeVal) {
+                    const startDate = new Date();
+                    if (timeVal === '1month') startDate.setMonth(startDate.getMonth() - 1);
+                    else if (timeVal === '2months') startDate.setMonth(startDate.getMonth() - 2);
+                    else if (timeVal === '3months') startDate.setMonth(startDate.getMonth() - 3);
+                    else if (timeVal === '4months') startDate.setMonth(startDate.getMonth() - 4);
+                    else if (timeVal === '5months') startDate.setMonth(startDate.getMonth() - 5);
+
+                    const startDateStr = startDate.toISOString().split('T')[0];
+                    url = `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${startDateStr}&minmagnitude=${minMag}&minlatitude=23.5&maxlatitude=37.5&minlongitude=60.5&maxlongitude=78.0&orderby=time&limit=60`;
                 } else {
-                    url = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2000-01-01&minmagnitude=5.0&minlatitude=23.5&maxlatitude=37.5&minlongitude=60.5&maxlongitude=78.0&orderby=time&limit=60';
+                    // Tab mode ('recent' or 'historic')
+                    const startDate = new Date();
+                    if (currentTabMode === 'historic') {
+                        minMag = '5.0';
+                        startDate.setFullYear(startDate.getFullYear() - 15);
+                    } else {
+                        minMag = '2.5';
+                        startDate.setDate(startDate.getDate() - 1); // Past 24 hours for live feed
+                    }
+                    const startDateStr = startDate.toISOString().split('T')[0];
+                    url = `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${startDateStr}&minmagnitude=${minMag}&minlatitude=23.5&maxlatitude=37.5&minlongitude=60.5&maxlongitude=78.0&orderby=time&limit=60`;
                 }
 
                 const response = await fetch(url);
@@ -620,25 +731,54 @@
                         lon: q.geometry.coordinates[0],
                         source: 'USGS Live Feed'
                     }));
-                    dataSourceText = 'Live USGS Connected ✓';
                 }
             } catch (err) {
                 console.warn("USGS API unreachable or blocked. Switching to backup array.", err);
             }
 
             if (quakes.length === 0) {
-                quakes = type === 'historic' ? fallbackQuakes.filter(q => q.mag >= 5.0) : fallbackQuakes;
-                dataSourceText = 'Regional Backup Feed Active ✓';
+                if (activeFilterType === 'date' && specificDateVal) {
+                    const targetStart = new Date(specificDateVal).setHours(0,0,0,0);
+                    const targetEnd = new Date(specificDateVal).setHours(23,59,59,999);
+                    quakes = fallbackQuakes.filter(q => q.time >= targetStart && q.time <= targetEnd);
+                } else if (activeFilterType === 'timeframe' && timeVal) {
+                    let maxHours = 24 * 30; // 1 month
+                    if (timeVal === '2months') maxHours = 24 * 60;
+                    else if (timeVal === '3months') maxHours = 24 * 90;
+                    else if (timeVal === '4months') maxHours = 24 * 120;
+                    else if (timeVal === '5months') maxHours = 24 * 150;
+
+                    const cutoff = Date.now() - maxHours * 3600 * 1000;
+                    quakes = fallbackQuakes.filter(q => q.time >= cutoff);
+                } else {
+                    if (currentTabMode === 'historic') {
+                        quakes = fallbackQuakes.filter(q => q.mag >= 5.0);
+                    } else {
+                        const cutoff = Date.now() - 24 * 3600 * 1000;
+                        quakes = fallbackQuakes.filter(q => q.time >= cutoff);
+                        if (quakes.length === 0) quakes = [fallbackQuakes[0]];
+                    }
+                }
             }
 
-            statusEl.innerText = dataSourceText;
-            renderEarthquakeList(quakes);
+            renderEarthquakeList(quakes, specificDateVal);
         }
 
-        function renderEarthquakeList(quakes) {
+        function renderEarthquakeList(quakes, specificDateVal) {
             const container = document.getElementById('earthquake-container');
             container.innerHTML = '';
             markersLayer.clearLayers();
+
+            if (quakes.length === 0) {
+                const dateMsg = specificDateVal ? ` for date ${specificDateVal}` : '';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-amber); font-size: 1.4rem; margin-bottom: 6px;"></i>
+                        <p>No earthquake data found${dateMsg}.</p>
+                    </div>
+                `;
+                return;
+            }
 
             quakes.forEach((quake) => {
                 const mag = Number(quake.mag).toFixed(1);
@@ -667,11 +807,13 @@
                 }
 
                 const markerColor = mag >= 6.0 ? '#d946ef' : (mag >= 5.0 ? '#ef233c' : (mag >= 4.0 ? '#fca311' : '#2ec4b6'));
+                const markerRadius = Math.max(Number(mag) * 1.8, 3);
+
                 const circleMarker = L.circleMarker([lat, lon], {
-                    radius: Math.max(mag * 2.2, 6),
+                    radius: markerRadius,
                     fillColor: markerColor,
                     color: '#ffffff',
-                    weight: 1.5,
+                    weight: 1.0,
                     opacity: 1,
                     fillOpacity: 0.85
                 }).bindPopup(`<b>${place}</b><br>Magnitude: ${mag} M<br>Depth: ${depth} km`);
@@ -727,18 +869,17 @@
             document.getElementById('modalDateTime').innerText = `Timestamp: ${new Date(quake.time).toUTCString()} | Exact Coordinates: ${lat}°N, ${lon}°E`;
             document.getElementById('modalMagVal').innerText = `${mag.toFixed(1)} Richter`;
             document.getElementById('modalDepthVal').innerText = `${depth} km deep`;
-            document.getElementById('modalSourceType').innerText = quake.source || 'USGS Sensor Net';
 
-            const riskEl = document.getElementById('modalRiskVal');
-            if (mag >= 6.0) {
-                riskEl.innerText = 'High (Severe Hazard)';
-                riskEl.style.color = 'var(--accent-rose)';
-            } else if (mag >= 4.5) {
-                riskEl.innerText = 'Moderate (Caution)';
-                riskEl.style.color = 'var(--accent-amber)';
+            const energyJoules = Math.pow(10, 1.5 * mag + 4.8);
+            const tntTons = energyJoules / 4.184e9;
+            const energyEl = document.getElementById('modalEnergyVal');
+            
+            if (tntTons >= 1000000) {
+                energyEl.innerText = `${(tntTons / 1000000).toFixed(2)} Megatons TNT`;
+            } else if (tntTons >= 1000) {
+                energyEl.innerText = `${(tntTons / 1000).toFixed(1)}k Tons TNT`;
             } else {
-                riskEl.innerText = 'Low (Minimal Risk)';
-                riskEl.style.color = 'var(--accent-emerald)';
+                energyEl.innerText = `${tntTons.toFixed(1)} Tons TNT`;
             }
 
             document.getElementById('quakeModal').style.display = 'flex';
@@ -804,7 +945,7 @@
 
         window.onload = () => {
             initMap();
-            loadSeismicData('recent');
+            loadSeismicData();
         };
     </script>
 </body>
