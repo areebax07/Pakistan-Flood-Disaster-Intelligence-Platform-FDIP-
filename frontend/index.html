@@ -3,12 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pakistan Flood & Disaster Intelligence Platform (FDIP)</title>
+    <title>Pakistan Flood & Disaster Management</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- FontAwesome Pro Icons -->
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Toast Notification Styles */
+        :root {
+            --accent-cyan: #00f2fe;
+            --accent-blue: #4facfe;
+            --accent-amber: #f59e0b;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --glass-bg: rgba(15, 23, 42, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.12);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        /* --- Seamless Full-Cover Hero Section --- */
+        .hero-banner-wrapper {
+            position: relative;
+           
+            min-height: calc(100vh - 76px); /* Fills the exact screen height minus navbar */
+            display: flex;
+            align-items: center;
+            padding: 40px 0;
+        }
+
+        /* --- Glass Navigation --- */
+        header {
+            background: rgba(15, 23, 42, 0.9) !important;
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo-box {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan)) !important;
+            color: #0b1120 !important;
+            font-weight: 800;
+        }
+
+        /* --- Split Hero Layout --- */
+        .hero-container {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 40px;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 20px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .hero-text-left h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+        }
+
+        .hero-text-left h1 span {
+            color: var(--accent-amber);
+            display: block;
+        }
+
+        .hero-text-left p {
+            font-size: 1.15rem;
+            color: #e2e8f0;
+            margin-bottom: 30px;
+            max-width: 580px;
+            line-height: 1.6;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+        }
+
+        .hero-cta-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        /* --- Zig-Zag Circular Interactive Cards on Right --- */
+        .hero-right-zigzag {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            position: relative;
+        }
+
+        .zigzag-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(14px);
+            padding: 16px 20px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .zigzag-card:nth-child(even) {
+            transform: translateX(25px);
+        }
+
+        .zigzag-card:hover {
+            transform: translateX(10px) scale(1.02);
+            border-color: var(--accent-cyan);
+            background: rgba(30, 41, 59, 0.95);
+            box-shadow: 0 12px 35px rgba(0, 242, 254, 0.25);
+        }
+
+        .zigzag-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 2px solid var(--accent-cyan);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .zigzag-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .zigzag-card:hover .zigzag-avatar img {
+            transform: scale(1.1);
+        }
+
+        .zigzag-info strong {
+            display: block;
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+            color: #f8fafc;
+        }
+
+        .zigzag-info span {
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            line-height: 1.4;
+        }
+
+        /* --- Alternating Story / Image Sections --- */
+        .story-wrapper {
+            max-width: 1280px;
+            margin: 80px auto;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 70px;
+        }
+
+        .story-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .story-image {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border: 1px solid var(--glass-border);
+        }
+
+        .story-image img {
+            width: 100%;
+            height: 360px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .story-image:hover img {
+            transform: scale(1.05);
+        }
+
+        .story-content h3 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #f8fafc;
+        }
+
+        .story-content p {
+            font-size: 1.05rem;
+            color: #f4f4f5;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        /* --- Live Dashboard Section --- */
+        .live-dashboard-section {
+            max-width: 1280px;
+            margin: 80px auto;
+            padding: 0 20px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .dashboard-header h3 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #f8fafc;
+        }
+
+        .status-grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .region-card-live {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px);
+            padding: 22px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .region-card-live::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+        }
+        .region-card-live.safe::before { background: var(--accent-emerald); }
+        .region-card-live.warning::before { background: var(--accent-amber); }
+        .region-card-live.danger::before { background: var(--accent-rose); }
+
+        .region-card-live:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-cyan);
+            background: rgba(30, 41, 59, 0.9);
+        }
+
+        .region-card-live h4 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        /* Metrics Live Grid Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .metric-card-live {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.7));
+            border: 1px solid var(--glass-border);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .metric-card-live:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-cyan);
+        }
+
+        .metric-card-live h3 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--accent-cyan);
+            margin-bottom: 8px;
+        }
+
+        .metric-card-live p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Toast Styles */
         #toastContainer {
             position: fixed;
             bottom: 25px;
@@ -19,11 +319,11 @@
             gap: 10px;
         }
         .toast {
-            background: var(--card-bg, #0f172a);
-            border: 1px solid var(--border-glass, rgba(255,255,255,0.1));
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--glass-border);
             color: #fff;
             padding: 14px 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             backdrop-filter: blur(12px);
             font-size: 0.9rem;
@@ -31,29 +331,40 @@
             align-items: center;
             gap: 12px;
             animation: slideIn 0.3s ease forwards;
-            min-width: 280px;
         }
-        .toast.success { border-left: 4px solid var(--accent-emerald, #34d399); }
-        .toast.error { border-left: 4px solid var(--accent-rose, #fb7185); }
-        .toast.info { border-left: 4px solid var(--accent-cyan, #22d3ee); }
+        .toast.success { border-left: 4px solid var(--accent-emerald); }
+        .toast.error { border-left: 4px solid var(--accent-rose); }
+        .toast.info { border-left: 4px solid var(--accent-cyan); }
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
+        }
+
+        @media (max-width: 900px) {
+            .hero-container, .story-row {
+                grid-template-columns: 1fr;
+            }
+            .hero-right-zigzag {
+                transform: none !important;
+            }
+            .zigzag-card:nth-child(even) {
+                transform: translateX(0px);
+            }
+            .hero-text-left h1 { font-size: 2.5rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Toast Container -->
     <div id="toastContainer"></div>
 
     <!-- Header Navbar -->
     <header>
         <div class="logo-section">
-            <div class="logo-box">FDIP</div>
+            <div class="logo-box">PFDM</div>
             <div class="logo-text">
-                <h1>Pakistan Flood & Disaster Intelligence</h1>
-                <p>National Multi-Hazard Monitoring Grid</p>
+                <h1>Pakistan Flood & Disaster Management</h1>
+                <p>Standing Together &bull; Protecting Communities</p>
             </div>
         </div>
         
@@ -71,96 +382,166 @@
         </div>
     </header>
 
-    <!-- Hero Content -->
-    <main class="hero-wrapper">
-        <div class="live-badge-pill">
-            <div class="pulse-dot"></div>
-            LIVE &bull; NATIONAL COVERAGE &bull; UPDATED 4S AGO
-        </div>
+    <!-- Seamless Full-Cover Hero Section -->
+    <div class="hero-banner-wrapper">
+        <section class="hero-container">
+            <!-- Left Side: Bold Human-Centric Text -->
+            <div class="hero-text-left">
+                <div class="live-badge-pill" style="margin-bottom: 20px; display: inline-flex;">
+                    <div class="pulse-dot"></div>
+                    NATIONAL EMERGENCY SUPPORT &bull; LIVE
+                </div>
 
-        <h2>Real-Time Multi-Hazard<br><span>Intelligence for Pakistan</span></h2>
+                <h1>Standing Together. <span>Protecting Lives.</span></h1>
+                <p>During times of flood and crisis, every second matters. We connect satellite intelligence with rapid ground response to keep families informed, safe, and supported across Pakistan.</p>
 
-        <!-- Converted small category indicators into interactive navigation buttons with card-like icons -->
-        <div class="hazard-pills">
-            <a href="map.html?layer=flood" class="pill"><i class="fa-solid fa-water" style="color: var(--accent-cyan);"></i> Flood Tracking</a>
-            <a href="map.html?layer=seismic" class="pill"><i class="fa-solid fa-house-chimney-crack" style="color: var(--accent-amber);"></i> Seismic Arrays</a>
-            <a href="map.html?layer=weather" class="pill"><i class="fa-solid fa-cloud-sun-rain" style="color: var(--accent-emerald);"></i> Weather Telemetry</a>
-            <a href="map.html?layer=aviation" class="pill"><i class="fa-solid fa-plane-slash" style="color: var(--text-muted);"></i> Aviation Layers</a>
-            <a href="map.html?layer=agriculture" class="pill"><i class="fa-solid fa-seedling" style="color: var(--accent-emerald);"></i> Agriculture Risk</a>
-        </div>
+                <div class="hero-cta-group">
+                    <a href="map.html" class="btn-main btn-cyan">
+                        <i class="fa-solid fa-map-location-dot"></i> View Disaster Map
+                    </a>
+                    <a href="alerts.html" class="btn-main btn-amber">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Emergency Warnings
+                    </a>
+                </div>
+            </div>
 
-        <p>Advanced operational monitoring framework providing live satellite telemetry, seismic activity feeds, automated risk matrices, and citizen damage reporting systems across Pakistan.</p>
+            <!-- Right Side: Updated Zig-Zag Circular Photo Action Cards -->
+            <div class="hero-right-zigzag">
+                <a href="flood.html" class="zigzag-card">
+                    <div class="zigzag-avatar">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjrSwBwEqEkejwaGhb9iW50RArL1aJTE45GypsDl4gxfEuEgi5EuKdz20&s=10" alt="River Tracking">
+                    </div>
+                    <div class="zigzag-info">
+                        <strong>River & Flood Tracking</strong>
+                        <span>Real-time water levels across major rivers & basins</span>
+                    </div>
+                </a>
 
-        <!-- Removed Submit Citizen Report button from hero; Explore Map & Alerts remain with direct entry/portal protection -->
-        <div class="cta-row">
-            <a href="map.html" class="btn-main btn-cyan">
-                <i class="fa-solid fa-map-location-dot"></i> Explore Live Map
-            </a>
-            <a href="alerts.html" class="btn-main btn-amber">
-                <i class="fa-solid fa-triangle-exclamation"></i> View Active Alerts
-            </a>
-        </div>
-    </main>
+                <a href="earthquake.html" class="zigzag-card">
+                    <div class="zigzag-avatar">
+                        <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=200&q=80" alt="Seismic">
+                    </div>
+                    <div class="zigzag-info">
+                        <strong>Seismic Activity</strong>
+                        <span>Live earthquake telemetry & risk zones monitoring</span>
+                    </div>
+                </a>
 
-    <!-- Regional Status Bar -->
-    <div class="status-grid">
-        <div class="region-card">
-            <h4>Punjab</h4>
-            <div class="status-indicator-tag status-safe"><i class="fa-solid fa-circle"></i> Safe</div>
-        </div>
-        <div class="region-card">
-            <h4>Sindh</h4>
-            <div class="status-indicator-tag status-warning"><i class="fa-solid fa-circle"></i> Warning</div>
-        </div>
-        <div class="region-card">
-            <h4>Khyber Pakhtunkhwa</h4>
-            <div class="status-indicator-tag status-danger"><i class="fa-solid fa-circle"></i> Danger</div>
-        </div>
-        <div class="region-card">
-            <h4>Islamabad</h4>
-            <div class="status-indicator-tag status-safe"><i class="fa-solid fa-circle"></i> Safe</div>
-        </div>
-        <div class="region-card">
-            <h4>Balochistan</h4>
-            <div class="status-indicator-tag status-warning"><i class="fa-solid fa-circle"></i> Warning</div>
-        </div>
+                <a href="weather.html" class="zigzag-card">
+                    <div class="zigzag-avatar">
+                        <img src="https://img.magnific.com/free-photo/weather-effects-composition_23-2149853295.jpg?semt=ais_hybrid&w=740&q=80s" alt="Weather">
+                    </div>
+                    <div class="zigzag-info">
+                        <strong>Weather & Monsoon Alerts</strong>
+                        <span>Rainfall predictions & severe storm tracking</span>
+                    </div>
+                </a>
+
+                <a href="#" onclick="openAuthModal('citizen')" class="zigzag-card" style="border-color: rgba(244, 63, 94, 0.4);">
+                    <div class="zigzag-avatar" style="border-color: var(--accent-rose);">
+                        <img src="images/g3.jpg" alt="Assistance">
+                    </div>
+                    <div class="zigzag-info">
+                        <strong>Request Assistance / Report</strong>
+                        <span>Direct citizen incident & damage reporting portal</span>
+                    </div>
+                </a>
+            </div>
+        </section>
     </div>
 
-    <!-- Metrics Bottom Grid -->
-    <div class="metrics-grid">
-        <div class="metric-card">
-            <h3>128</h3>
-            <p>Active Monitoring Stations</p>
+    <!-- Alternating Story / Image Sections -->
+    <section class="story-wrapper">
+        
+        <!-- Story Row 1: Image Left, Text Right -->
+        <div class="story-row">
+            <div class="story-image">
+                <img src="https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=1920&q=80" alt="Relief and Rescue">
+            </div>
+            <div class="story-content">
+                <h3>Always By Your Side in Critical Times</h3>
+                <p>When heavy floods impact local communities, our unified network coordinates rapid relief teams, tracks river overflow, and brings immediate assistance where it is needed most. You are never alone in an emergency.</p>
+                <a href="#" onclick="openAuthModal('citizen')" class="btn-main btn-cyan">Get Support or Report Damage</a>
+            </div>
         </div>
-        <div class="metric-card">
-            <h3>6</h3>
-            <p>Live Seismic Events Tracked</p>
-        </div>
-        <div class="metric-card">
-            <h3>23</h3>
-            <p>Active Flood Watch Zones</p>
-        </div>
-        <div class="metric-card">
-            <h3>99.2%</h3>
-            <p>Satellite Feed Uptime</p>
-        </div>
-    </div>
 
-    <!-- Auth / Role-Based Modal -->
+        <!-- Story Row 2: Text Left, Image Right -->
+        <div class="story-row">
+            <div class="story-content">
+                <h3>Early Warnings That Save Families</h3>
+                <p>By monitoring water surge data and satellite imagery 24/7, we dispatch instant warnings to vulnerable districts before waters rise. Timely information gives families the vital hours needed to reach safe ground.</p>
+                <a href="alerts.html" class="btn-main btn-amber">Check Active Local Warnings</a>
+            </div>
+            <div class="story-image">
+                <img src="images/g4.jpg" alt="Community Support">
+            </div>
+        </div>
+
+    </section>
+
+    <!-- Live Interactive Dashboard Section -->
+    <section class="live-dashboard-section">
+        <div class="dashboard-header">
+            <h3><i class="fa-solid fa-chart-line" style="color: var(--accent-cyan);"></i> Provincial Real-Time Status Dashboard</h3>
+        </div>
+
+        <div class="status-grid-cards">
+            <div class="region-card-live safe">
+                <h4>Punjab</h4>
+                <div class="status-indicator-tag status-safe"><i class="fa-solid fa-circle"></i> Safe Operations</div>
+            </div>
+            <div class="region-card-live warning">
+                <h4>Sindh</h4>
+                <div class="status-indicator-tag status-warning"><i class="fa-solid fa-circle"></i> Moderate Warning</div>
+            </div>
+            <div class="region-card-live danger">
+                <h4>Khyber Pakhtunkhwa</h4>
+                <div class="status-indicator-tag status-danger"><i class="fa-solid fa-circle"></i> High Danger Level</div>
+            </div>
+            <div class="region-card-live safe">
+                <h4>Islamabad</h4>
+                <div class="status-indicator-tag status-safe"><i class="fa-solid fa-circle"></i> Safe Operations</div>
+            </div>
+            <div class="region-card-live warning">
+                <h4>Balochistan</h4>
+                <div class="status-indicator-tag status-warning"><i class="fa-solid fa-circle"></i> Weather Warning</div>
+            </div>
+        </div>
+
+        <!-- Live Metrics Cards -->
+        <div class="metrics-grid">
+            <div class="metric-card-live">
+                <h3>128</h3>
+                <p>Active Monitoring Stations</p>
+            </div>
+            <div class="metric-card-live">
+                <h3>6</h3>
+                <p>Live Seismic Sensors</p>
+            </div>
+            <div class="metric-card-live">
+                <h3>23</h3>
+                <p>High-Risk Inundation Zones</p>
+            </div>
+            <div class="metric-card-live">
+                <h3>99.2%</h3>
+                <p>Satellite Network Uptime</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Auth Modal -->
     <div class="modal-overlay" id="authModal">
         <div class="modal-card">
             <button class="modal-close-btn" onclick="closeAuthModal()">&times;</button>
-            <div id="modalContent">
-                <!-- Dynamic Form content injected by JS -->
-            </div>
+            <div id="modalContent"></div>
         </div>
     </div>
 
     <footer>
-        <p>&copy; 2026 Pakistan Flood & Disaster Intelligence Platform &bull; Secure National Emergency Infrastructure</p>
+        <p>&copy; 2026 Pakistan Flood & Disaster Management &bull; Dedicated to Protecting Every Citizen</p>
     </footer>
 
-    <!-- Toast Notification Global Function -->
+    <!-- Global Toast Script -->
     <script>
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
@@ -183,7 +564,7 @@
         }
     </script>
 
-    <!-- Interactive Script for Authentication & Citizen Dashboard Routing -->
+    <!-- Auth Script -->
     <script>
         function openAuthModal(mode) {
             const modal = document.getElementById('authModal');
@@ -192,8 +573,8 @@
 
             if (mode === 'citizen' || mode === 'login') {
                 content.innerHTML = `
-                    <h3><i class="fa-solid fa-id-card" style="color: var(--accent-cyan);"></i> Citizen Portal Sign In</h3>
-                    <p>Citizens must sign in or register to access the dedicated reporting dashboard and submit damage alerts.</p>
+                    <h3><i class="fa-solid fa-id-card" style="color: var(--accent-cyan);"></i> Citizen Support Portal</h3>
+                    <p>Sign in to submit incident damage reports and request emergency support.</p>
                     <form id="authForm" onsubmit="handleCitizenLogin(event)">
                         <div class="form-group">
                             <label>Email Address</label>
@@ -203,20 +584,17 @@
                             <label>Password</label>
                             <input type="password" id="authPassword" placeholder="••••••••••••" required>
                         </div>
-                        <button type="submit" class="btn-auth btn-signup" style="width: 100%; padding: 12px; margin-top: 10px;">Login to Citizen Dashboard</button>
+                        <button type="submit" class="btn-auth btn-signup" style="width: 100%; padding: 12px; margin-top: 10px;">Sign In to Portal</button>
                     </form>
-                    <p style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
-                        Don't have an account? <a href="#" onclick="openAuthModal('signup')" style="color: var(--accent-cyan); text-decoration: underline;">Create one</a>
-                    </p>
                 `;
             } else if (mode === 'signup') {
                 content.innerHTML = `
-                    <h3><i class="fa-solid fa-user-plus" style="color: var(--accent-cyan);"></i> Register Citizen Account</h3>
-                    <p>Create your secure profile to submit and track flood and disaster incident tickets.</p>
+                    <h3><i class="fa-solid fa-user-plus" style="color: var(--accent-cyan);"></i> Register Account</h3>
+                    <p>Create a secure profile to access emergency reporting tools.</p>
                     <form id="authForm" onsubmit="handleCitizenSignup(event)">
                         <div class="form-group">
                             <label>Full Name</label>
-                            <input type="text" id="authName" placeholder="Areeba Zafar" required>
+                            <input type="text" id="authName" placeholder="Full Name" required>
                         </div>
                         <div class="form-group">
                             <label>Email Address</label>
@@ -226,53 +604,24 @@
                             <label>Password</label>
                             <input type="password" id="authPassword" placeholder="••••••••••••" required>
                         </div>
-                        <button type="submit" class="btn-auth btn-signup" style="width: 100%; padding: 12px; margin-top: 10px;">Create Account & Sign In</button>
+                        <button type="submit" class="btn-auth btn-signup" style="width: 100%; padding: 12px; margin-top: 10px;">Register Account</button>
                     </form>
-                    <p style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
-                        Already have an account? <a href="#" onclick="openAuthModal('login')" style="color: var(--accent-cyan); text-decoration: underline;">Sign in</a>
-                    </p>
                 `;
             } else if (mode === 'admin') {
                 content.innerHTML = `
-                    <h3><i class="fa-solid fa-shield-halved" style="color: var(--accent-amber);"></i> Staff / Admin Portal</h3>
-                    <p>Access national hazard logs, review pending citizen reports, and manage emergency broadcasts.</p>
+                    <h3><i class="fa-solid fa-shield-halved" style="color: var(--accent-amber);"></i> Official Command Login</h3>
+                    <p>Access official response logs and dispatch tools.</p>
                     <form id="adminAuthForm" onsubmit="handleAdminLogin(event)">
                         <div class="form-group">
                             <label>Staff Official Email</label>
                             <input type="email" id="adminEmail" placeholder="staff@domain.com" required>
                         </div>
                         <div class="form-group">
-                            <label>Secure Key / Password</label>
+                            <label>Password</label>
                             <input type="password" id="adminPassword" placeholder="••••••••••••" required>
                         </div>
-                        <button type="submit" class="btn-auth btn-signup" style="width: 100%; padding: 12px;">Access Admin Command</button>
+                        <button type="submit" class="btn-auth btn-signup" style="width: 100%; padding: 12px;">Login to Command</button>
                     </form>
-                    <p style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
-                        Need an admin account? <a href="#" onclick="openAuthModal('admin-signup')" style="color: var(--accent-amber); text-decoration: underline;">Register Admin Account</a>
-                    </p>
-                `;
-            } else if (mode === 'admin-signup') {
-                content.innerHTML = `
-                    <h3><i class="fa-solid fa-user-shield" style="color: var(--accent-amber);"></i> Register Admin Account</h3>
-                    <p>Create credentials for administrative command access.</p>
-                    <form id="adminSignupForm" onsubmit="handleAdminSignup(event)">
-                        <div class="form-group">
-                            <label>Full Name</label>
-                            <input type="text" id="adminRegName" placeholder="Staff Official" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Email Address</label>
-                            <input type="email" id="adminRegEmail" placeholder="staff@domain.com" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" id="adminRegPassword" placeholder="••••••••••••" required>
-                        </div>
-                        <button type="submit" class="btn-auth btn-signup" style="width: 100%; padding: 12px; margin-top: 10px;">Create Admin Account</button>
-                    </form>
-                    <p style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
-                        Already have an admin account? <a href="#" onclick="openAuthModal('admin')" style="color: var(--accent-amber); text-decoration: underline;">Sign in</a>
-                    </p>
                 `;
             }
         }
@@ -294,7 +643,7 @@
         if (error) {
             showToast('Login failed: ' + error.message, 'error');
         } else {
-            showToast("Authentication successful! Redirecting to Citizen Dashboard...", "success");
+            showToast("Authenticated! Redirecting...", "success");
             closeAuthModal();
             setTimeout(() => window.location.href = "citizen.html", 1000);
         }
@@ -309,20 +658,16 @@
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
-            options: {
-                data: { full_name: fullName, role: 'citizen' }
-            }
+            options: { data: { full_name: fullName, role: 'citizen' } }
         });
 
         if (error) {
             showToast('Sign up failed: ' + error.message, 'error');
         } else {
             if (data.user) {
-                await supabase.from('profiles').insert([
-                    { id: data.user.id, full_name: fullName, role: 'citizen' }
-                ]);
+                await supabase.from('profiles').insert([{ id: data.user.id, full_name: fullName, role: 'citizen' }]);
             }
-            showToast("Account created successfully! Redirecting...", "success");
+            showToast("Account created! Redirecting...", "success");
             closeAuthModal();
             setTimeout(() => window.location.href = "citizen.html", 1000);
         }
@@ -337,41 +682,12 @@
         if (error) {
             showToast('Admin Login failed: ' + error.message, 'error');
         } else {
-            showToast("Admin credentials authenticated. Redirecting to Staff Dashboard...", "success");
+            showToast("Admin access verified...", "success");
             closeAuthModal();
             setTimeout(() => window.location.href = "admin.html", 1000);
         }
     }
 
-    window.handleAdminSignup = async function(e) {
-        e.preventDefault();
-        const fullName = document.getElementById('adminRegName').value;
-        const email = document.getElementById('adminRegEmail').value;
-        const password = document.getElementById('adminRegPassword').value;
-
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: { full_name: fullName, role: 'admin' }
-            }
-        });
-
-        if (error) {
-            showToast('Admin registration failed: ' + error.message, 'error');
-        } else {
-            if (data.user) {
-                await supabase.from('profiles').insert([
-                    { id: data.user.id, full_name: fullName, role: 'admin' }
-                ]);
-            }
-            showToast("Admin account registered successfully! Redirecting...", "success");
-            closeAuthModal();
-            setTimeout(() => window.location.href = "admin.html", 1000);
-        }
-    }
-
-    // Check active session on index load to adapt top nav buttons
     async function checkSession() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
@@ -389,109 +705,6 @@
         }
     }
     checkSession();
-</script>
-
-<!-- Real-Time Home Screen Pipeline Script -->
-<script type="module">
-    import { supabase } from './js/supabaseClient.js';
-
-    window.addEventListener('DOMContentLoaded', async () => {
-        await fetchAndUpdateHomeRealTimeData();
-        // Refresh every 30 seconds to keep live telemetry synchronized
-        setInterval(fetchAndUpdateHomeRealTimeData, 30000);
-    });
-
-    async function fetchAndUpdateHomeRealTimeData() {
-        try {
-            // 1. Fetch live hazard logs & stations from Supabase
-            const { data: logs, error: logErr } = await supabase
-                .from('hazard_logs')
-                .select('*, locations(name, region, latitude, longitude)')
-                .order('timestamp', { ascending: false });
-
-            const { data: stations, error: statErr } = await supabase
-                .from('locations')
-                .select('*');
-
-            if (logErr || statErr) {
-                console.warn('Using live fallback simulation due to network/table structure:', logErr || statErr);
-                updateUIWithSimulatedLiveMetrics();
-                return;
-            }
-
-            // 2. Update Metrics Counters dynamically
-            const activeStationsCount = stations ? stations.length : 128;
-            const seismicCount = logs ? logs.filter(l => l.hazard_type && l.hazard_type.toLowerCase().includes('seismic')).length : 6;
-            const floodCount = logs ? logs.filter(l => l.hazard_type && l.hazard_type.toLowerCase().includes('flood')).length : 23;
-
-            updateMetricCardValue(0, activeStationsCount);
-            updateMetricCardValue(1, seismicCount);
-            updateMetricCardValue(2, floodCount);
-            updateMetricCardValue(3, '99.4%'); // Live feed uptime calculation indicator
-
-            // 3. Update Regional Status Cards dynamically based on latest hazard severities
-            updateRegionalStatusCards(logs);
-
-        } catch (err) {
-            console.error('Error syncing home real-time data:', err);
-            updateUIWithSimulatedLiveMetrics();
-        }
-    }
-
-    function updateMetricCardValue(index, value) {
-        const metricCards = document.querySelectorAll('.metrics-grid .metric-card h3');
-        if (metricCards[index]) {
-            metricCards[index].textContent = value;
-        }
-    }
-
-    function updateRegionalStatusCards(logs) {
-        const regionCards = document.querySelectorAll('.status-grid .region-card');
-        
-        // Map region headings to latest log severity
-        regionCards.forEach(card => {
-            const h4 = card.querySelector('h4');
-            const tag = card.querySelector('.status-indicator-tag');
-            if (!h4 || !tag) return;
-
-            const regionName = h4.textContent.trim().toLowerCase();
-            
-            // Find latest log matching this region
-            const regionLog = logs.find(l => {
-                const locReg = (l.locations?.region || l.locations?.name || '').toLowerCase();
-                return locReg.includes(regionName);
-            });
-
-            let status = 'Safe';
-            let statusClass = 'status-safe';
-
-            if (regionLog) {
-                if (regionLog.severity === 'DANGER') {
-                    status = 'Danger';
-                    statusClass = 'status-danger';
-                } else if (regionLog.severity === 'WARNING') {
-                    status = 'Warning';
-                    statusClass = 'status-warning';
-                }
-            } else {
-                // Realistic live baseline rotation if specific row lookup is pending
-                if (regionName.includes('khyber')) { status = 'Danger'; statusClass = 'status-danger'; }
-                else if (regionName.includes('sindh') || regionName.includes('balochistan')) { status = 'Warning'; statusClass = 'status-warning'; }
-                else { status = 'Safe'; statusClass = 'status-safe'; }
-            }
-
-            tag.className = `status-indicator-tag ${statusClass}`;
-            tag.innerHTML = `<i class="fa-solid fa-circle"></i> ${status}`;
-        });
-    }
-
-    function updateUIWithSimulatedLiveMetrics() {
-        // Dynamic fallback telemetry simulating live API rotation
-        updateMetricCardValue(0, 131);
-        updateMetricCardValue(1, 5);
-        updateMetricCardValue(2, 24);
-        updateMetricCardValue(3, '99.6%');
-    }
 </script>
 
 </body>
