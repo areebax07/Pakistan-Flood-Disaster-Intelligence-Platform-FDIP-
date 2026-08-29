@@ -94,10 +94,12 @@
     <!-- Floating Left Panel -->
     <aside class="absolute top-24 left-4 z-20 w-64 glass-panel rounded-2xl p-3.5 space-y-4 pointer-events-auto">
         <div>
-            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Map Theme</h3>
-            <button onclick="toggleMapTheme()" id="theme-toggle-btn" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-[11px] font-semibold text-cyan-400 border border-cyan-500/30 transition">
-                <span>Switch to Dark Mode</span>
-            </button>
+            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Map View</h3>
+            <select id="map-view-select" onchange="changeMapTheme(this.value)" class="w-full px-3 py-2 rounded-xl bg-slate-900/90 text-[11px] font-semibold text-cyan-400 border border-cyan-500/30 focus:outline-none transition">
+                <option value="street" selected>Street View</option>
+                <option value="terrain">Terrain</option>
+                <option value="satellite">Satellite</option>
+            </select>
         </div>
 
         <div class="border-t border-slate-800/80 pt-3">
@@ -189,6 +191,50 @@
         </div>
     </div>
 
+    <!-- Floating Draggable Flood Legend -->
+    <div id="draggable-flood-legend" class="draggable-panel glass-panel p-3 rounded-2xl w-64 shadow-2xl border border-slate-700/80">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2 cursor-grab active:cursor-grabbing handle">
+            <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">🌊 Flood Basin Thresholds</span>
+            <span class="text-[9px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">Drag Me</span>
+        </div>
+        <div class="space-y-1.5 bg-slate-950/80 p-2 rounded-xl border border-slate-800/50">
+            <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>
+                <span>Safe: Rainfall &lt;10 mm, Discharge &lt;120 m³/s</span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                <span class="w-2.5 h-2.5 rounded-sm bg-amber-400"></span>
+                <span>Warning: Rain 10-25 mm or Discharge 120-250 m³/s</span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                <span class="w-2.5 h-2.5 rounded-sm bg-red-500"></span>
+                <span>Critical: Rain &gt;25 mm or Discharge &gt;250 m³/s</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Draggable Agriculture Legend -->
+    <div id="draggable-agriculture-legend" class="draggable-panel glass-panel p-3 rounded-2xl w-64 shadow-2xl border border-slate-700/80">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2 cursor-grab active:cursor-grabbing handle">
+            <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">🌾 Agricultural Stress Legend</span>
+            <span class="text-[9px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">Drag Me</span>
+        </div>
+        <div class="space-y-1.5 bg-slate-950/80 p-2 rounded-xl border border-slate-800/50">
+            <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>
+                <span>Optimal: Soil Moisture 0.15 - 0.35 m³/m³</span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                <span class="w-2.5 h-2.5 rounded-sm bg-amber-400"></span>
+                <span>Drought Stress: Soil Moisture &lt;0.15 m³/m³</span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px] text-slate-300">
+                <span class="w-2.5 h-2.5 rounded-sm bg-red-500"></span>
+                <span>Waterlogging: Soil Moisture &gt;0.35 m³/m³</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Floating Right Panel -->
     <aside class="absolute top-24 right-4 z-20 w-80 glass-panel rounded-2xl p-4 space-y-3.5 pointer-events-auto">
         <div>
@@ -239,22 +285,21 @@
         const map = L.map('map', { zoomControl: false, preferCanvas: true }).setView([30.3753, 69.3451], 6);
 
         let streetTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-        let darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+        let terrainTiles = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
+        let satelliteTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
 
-        let isDarkMode = false;
-        window.toggleMapTheme = function() {
-            const btn = document.getElementById('theme-toggle-btn');
-            if (isDarkMode) {
-                map.removeLayer(darkTiles);
-                streetTiles.addTo(map);
-                btn.innerHTML = '<span>Switch to Dark Mode</span>';
-                isDarkMode = false;
-            } else {
-                map.removeLayer(streetTiles);
-                darkTiles.addTo(map);
-                btn.innerHTML = '<span>Switch to Street View</span>';
-                isDarkMode = true;
+        let currentTileLayer = streetTiles;
+
+        window.changeMapTheme = function(theme) {
+            map.removeLayer(currentTileLayer);
+            if (theme === 'street') {
+                currentTileLayer = streetTiles;
+            } else if (theme === 'terrain') {
+                currentTileLayer = terrainTiles;
+            } else if (theme === 'satellite') {
+                currentTileLayer = satelliteTiles;
             }
+            currentTileLayer.addTo(map);
         };
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -271,6 +316,8 @@
             const btn = document.getElementById(`btn-${type}`);
             const flowLegend = document.getElementById('draggable-legend');
             const aviationLegend = document.getElementById('draggable-aviation-legend');
+            const floodLegend = document.getElementById('draggable-flood-legend');
+            const agriLegend = document.getElementById('draggable-agriculture-legend');
 
             if (map.hasLayer(layerGroups[type])) {
                 map.removeLayer(layerGroups[type]);
@@ -278,6 +325,8 @@
                 btn.classList.add('text-slate-400');
                 if (type === 'riverFlow') flowLegend.style.display = 'none';
                 if (type === 'aviation') aviationLegend.style.display = 'none';
+                if (type === 'flood') floodLegend.style.display = 'none';
+                if (type === 'agriculture') agriLegend.style.display = 'none';
             } else {
                 map.addLayer(layerGroups[type]);
                 btn.classList.add('bg-slate-800/80', 'border', 'border-slate-700/60', 'text-white');
@@ -285,14 +334,32 @@
 
                 if (type === 'riverFlow') {
                     aviationLegend.style.display = 'none';
+                    floodLegend.style.display = 'none';
+                    agriLegend.style.display = 'none';
                     flowLegend.style.display = 'block';
                     flowLegend.style.top = '120px';
                     flowLegend.style.left = '290px';
                 } else if (type === 'aviation') {
                     flowLegend.style.display = 'none';
+                    floodLegend.style.display = 'none';
+                    agriLegend.style.display = 'none';
                     aviationLegend.style.display = 'block';
                     aviationLegend.style.top = '120px';
                     aviationLegend.style.left = '290px';
+                } else if (type === 'flood') {
+                    flowLegend.style.display = 'none';
+                    aviationLegend.style.display = 'none';
+                    agriLegend.style.display = 'none';
+                    floodLegend.style.display = 'block';
+                    floodLegend.style.top = '120px';
+                    floodLegend.style.left = '290px';
+                } else if (type === 'agriculture') {
+                    flowLegend.style.display = 'none';
+                    aviationLegend.style.display = 'none';
+                    floodLegend.style.display = 'none';
+                    agriLegend.style.display = 'block';
+                    agriLegend.style.top = '120px';
+                    agriLegend.style.left = '290px';
                 }
             }
         };
@@ -331,10 +398,11 @@
 
         makeDraggable(document.getElementById("draggable-legend"));
         makeDraggable(document.getElementById("draggable-aviation-legend"));
+        makeDraggable(document.getElementById("draggable-flood-legend"));
+        makeDraggable(document.getElementById("draggable-agriculture-legend"));
 
         let activeMarker = null;
 
-        // Strict boundary polygon for Pakistan to remove all out-of-bounds lines/data
         const pakistanPolygon = [
             [37.083, 74.500], [36.900, 75.500], [35.500, 77.800], [34.500, 76.500],
             [34.000, 74.500], [32.500, 74.800], [31.500, 74.600], [30.000, 72.000],
@@ -393,10 +461,10 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.address) {
-                        const city = data.address.city || data.address.town || data.address.village || data.address.county || data.address.district || data.address.state_district;
+                        const placeName = data.address.city || data.address.town || data.address.village || data.address.municipality || data.address.hamlet || data.address.suburb || data.address.county || data.address.district || data.address.state_district;
                         const state = data.address.state || "Pakistan";
-                        if (city) {
-                            const name = `${city}, ${state}`;
+                        if (placeName) {
+                            const name = `${placeName}, ${state}`;
                             localStorage.setItem(cacheKey, name);
                             return name;
                         }
@@ -488,7 +556,6 @@
             evaluateLocation(lat, lon, locationName);
         });
 
-        // Key Barrages including Kotri Barrage on the rightmost/downstream side
         const keyBarrages = [
             { name: "Tarbela Dam Station", coord: [34.08, 72.70] },
             { name: "Mangla Dam Station", coord: [33.14, 73.64] },
@@ -497,7 +564,7 @@
             { name: "Taunsa Barrage", coord: [30.51, 70.84] },
             { name: "Guddu Barrage", coord: [28.42, 69.70] },
             { name: "Sukkur Barrage", coord: [27.68, 68.85] },
-            { name: "Kotri Barrage (Lower Indus)", coord: [25.36, 68.35] }, // Rightmost Indus downstream barrage
+            { name: "Kotri Barrage (Lower Indus)", coord: [25.36, 68.35] },
             { name: "Trimmu Headworks", coord: [31.18, 72.15] },
             { name: "Marala Headworks", coord: [32.67, 74.46] },
             { name: "Qadirabad Barrage", coord: [32.32, 73.68] },
@@ -517,8 +584,6 @@
                 if (!geojsonRes.ok) return;
                 const riversGeoJSON = await geojsonRes.json();
 
-                // 1. Strict spatial filtering: Remove all river line segments outside Pakistan's borders
-                // 2. Thinner and lighter styling: stroke width 2px, semi-transparent light blue #0288d1
                 const filteredFeatures = riversGeoJSON.features.filter(f => {
                     const order = f.properties?.ORD_STRA || f.properties?.ord_stra || 1;
                     if (order < 6) return false;
@@ -526,7 +591,6 @@
                     const coords = f.geometry?.coordinates;
                     if (!coords) return false;
 
-                    // Check if at least one coordinate point lies strictly inside Pakistan boundary
                     const checkCoord = (pt) => Array.isArray(pt) && isStrictlyInPakistan(pt[1], pt[0]);
 
                     if (f.geometry.type === 'LineString') {
@@ -541,8 +605,8 @@
 
                 const riverLayer = L.geoJSON(mainRiversGeoJSON, {
                     style: {
-                        color: "#0288d1",  // Light blue stroke
-                        weight: 3,          // Thinner width
+                        color: "#0288d1",
+                        weight: 3,
                         opacity: 0.75
                     },
                     smoothFactor: 2.0,
@@ -574,7 +638,6 @@
                 });
                 layerGroups.riverFlow.addLayer(riverLayer);
 
-                // Load Barrages and evaluate dynamic discharge alert thresholds
                 const barrageLats = keyBarrages.map(b => b.coord[0]).join(',');
                 const barrageLons = keyBarrages.map(b => b.coord[1]).join(',');
 
@@ -608,8 +671,6 @@
                         badgeClass = 'badge-warning';
                     }
 
-                    const locName = getFastRegionName(st.coord[0], st.coord[1]);
-
                     const boxIcon = `<div style="background-color: ${flowColor}; width: 10px; height: 10px; border-radius: 2px; box-shadow: 0 0 6px ${flowColor}; border: 1.5px solid #0f172a;"></div>`;
                     const marker = L.marker(st.coord, { icon: L.divIcon({ className: 'river-box', html: boxIcon, iconSize: [10, 10] }) });
 
@@ -620,7 +681,6 @@
                                 <span class="popup-badge ${badgeClass}">${flowStatus}</span>
                             </div>
                             <div class="popup-subtitle">${st.name}</div>
-                            <div class="text-[10px] text-cyan-300 font-semibold mb-2">Location: ${locName}</div>
                             <div class="popup-grid">
                                 <div class="popup-metric">
                                     <div class="popup-metric-label">Flow Alert Status</div>
@@ -648,6 +708,14 @@
                         activeMarker = L.marker(st.coord).addTo(map);
                         const dynamicName = await fetchDynamicLocationName(st.coord[0], st.coord[1]);
                         evaluateLocation(st.coord[0], st.coord[1], dynamicName, flowStatus.includes('CRITICAL') ? 'CRITICAL' : flowStatus.includes('WARNING') ? 'WARNING' : 'SAFE');
+                        const popup = marker.getPopup();
+                        if (popup) {
+                            const wrapper = popup.getElement();
+                            if (wrapper) {
+                                const subtitleEl = wrapper.querySelector('.popup-subtitle');
+                                if (subtitleEl) subtitleEl.innerText = dynamicName;
+                            }
+                        }
                     });
 
                     layerGroups.riverFlow.addLayer(marker);
@@ -757,6 +825,14 @@
                         activeMarker = L.marker([pt.lat, pt.lon]).addTo(map);
                         const dynamicName = await fetchDynamicLocationName(pt.lat, pt.lon);
                         evaluateLocation(pt.lat, pt.lon, dynamicName, floodStatusText);
+                        const popup = floodMarker.getPopup();
+                        if (popup) {
+                            const wrapper = popup.getElement();
+                            if (wrapper) {
+                                const subtitleEl = wrapper.querySelector('.popup-subtitle');
+                                if (subtitleEl) subtitleEl.innerText = dynamicName;
+                            }
+                        }
                     });
                     
                     layerGroups.flood.addLayer(floodMarker);
@@ -819,6 +895,14 @@
                         activeMarker = L.marker([pt.lat, pt.lon]).addTo(map);
                         const dynamicName = await fetchDynamicLocationName(pt.lat, pt.lon);
                         evaluateLocation(pt.lat, pt.lon, dynamicName, agriStatusText);
+                        const popup = agriMarker.getPopup();
+                        if (popup) {
+                            const wrapper = popup.getElement();
+                            if (wrapper) {
+                                const subtitleEl = wrapper.querySelector('.popup-subtitle');
+                                if (subtitleEl) subtitleEl.innerText = dynamicName;
+                            }
+                        }
                     });
                     
                     layerGroups.agriculture.addLayer(agriMarker);
@@ -880,6 +964,14 @@
                         activeMarker = L.marker([pt.lat, pt.lon]).addTo(map);
                         const dynamicName = await fetchDynamicLocationName(pt.lat, pt.lon);
                         evaluateLocation(pt.lat, pt.lon, dynamicName, avStatusText);
+                        const popup = avMarker.getPopup();
+                        if (popup) {
+                            const wrapper = popup.getElement();
+                            if (wrapper) {
+                                const subtitleEl = wrapper.querySelector('.popup-subtitle');
+                                if (subtitleEl) subtitleEl.innerText = dynamicName;
+                            }
+                        }
                     });
 
                     layerGroups.aviation.addLayer(avMarker);
@@ -903,7 +995,6 @@
             }
         }
 
-        // SEISMIC ACTIVITY LAYER
         async function initEarthquakes() {
             try {
                 const minLat = 23.583, maxLat = 37.083, minLon = 60.833, maxLon = 77.833;
@@ -968,6 +1059,14 @@
                                 activeMarker = L.marker([lat, lon]).addTo(map);
                                 const dynamicName = await fetchDynamicLocationName(lat, lon);
                                 evaluateLocation(lat, lon, dynamicName, statusText);
+                                const popup = marker.getPopup();
+                                if (popup) {
+                                    const wrapper = popup.getElement();
+                                    if (wrapper) {
+                                        const subtitleEl = wrapper.querySelector('.popup-subtitle');
+                                        if (subtitleEl) subtitleEl.innerText = dynamicName;
+                                    }
+                                }
                             });
 
                             layerGroups.earthquake.addLayer(marker);
