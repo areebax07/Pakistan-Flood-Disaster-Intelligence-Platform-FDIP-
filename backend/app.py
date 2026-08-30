@@ -8,6 +8,9 @@ from supabase import create_client, Client
 # Load environment variables from .env file
 load_dotenv()
 
+template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../frontend'))
+static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../frontend'))
+
 app = Flask(__name__)
 CORS(app)  # Enable CORS so your frontend can talk to this backend
 
