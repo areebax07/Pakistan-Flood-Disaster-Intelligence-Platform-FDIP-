@@ -25,12 +25,13 @@ body {
     flex-direction: column;
     justify-content: space-between;
     overflow-x: hidden;
-    /* Balanced overlay so the background image is clearly visible and striking */
-    background-image: linear-gradient(to bottom, rgba(7, 10, 19, 0.35), rgba(7, 10, 19, 0.62)), 
-        url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1920&auto=format&fit=crop');
+    /* Clean dark gradient overlay combined with your custom single background image */
+    background-image: linear-gradient(to bottom, rgba(7, 10, 19, 0.17), rgba(7, 10, 19, 0.4)), 
+        url('../images/g2.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
+    background-repeat: no-repeat;
 }
 
 /* Header Navbar */
@@ -194,7 +195,7 @@ header {
     border: 1px solid var(--border-glass);
     padding: 8px 16px;
     border-radius: 20px;
-    font-size: 0.85krem;
+    font-size: 0.85rem;
     color: var(--text-muted);
     text-decoration: none;
     cursor: pointer;
