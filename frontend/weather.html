@@ -61,7 +61,6 @@
             gap: 12px;
         }
 
-        /* Customized Header Icon: Larger size and distinct color */
         header h1 i {
             font-size: 1.8rem;
             color: var(--accent-amber);
@@ -643,7 +642,7 @@
             <!-- Search bar & Toggles -->
             <div class="controls-row">
                 <div class="search-group">
-                    <input type="text" id="locationSearchInput" class="search-input" placeholder="Search location in Pakistan..." onkeypress="handleSearchKey(event)">
+                    <input type="text" id="locationSearchInput" class="search-input" placeholder="Search location in Pakistan (e.g. Jhelum)..." onkeypress="handleSearchKey(event)">
                     <button class="control-btn active" onclick="executeSearch()"><i class="fa-solid fa-search"></i></button>
                 </div>
                 <div>
@@ -846,7 +845,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
     <script>
-        // Non-functional enhancement: Persistency via localStorage for selected city and response caching for speed & latency optimization
         let currentCity = JSON.parse(localStorage.getItem('pk_weather_currentCity')) || { name: 'Islamabad', lat: 33.6844, lon: 73.0479 };
         let isAllAlertsMode = false;
         let map;
@@ -858,35 +856,328 @@
         let forecastModalHourlyChart = null;
         let fetchedDailyDataCache = null;
         let fetchedHourlyDataCache = null;
-        let lastFetchedWeatherData = null;
         let cachedAllPakistanAlerts = [];
         let searchDebounceTimer = null;
 
         const pakistanMajorHubs = [
+            // Punjab
             { name: 'Islamabad', lat: 33.6844, lon: 73.0479 },
             { name: 'Lahore', lat: 31.5204, lon: 74.3587 },
-            { name: 'Karachi', lat: 24.8607, lon: 67.0011 },
-            { name: 'Peshawar', lat: 34.0151, lon: 71.5249 },
-            { name: 'Quetta', lat: 30.1798, lon: 66.9750 },
-            { name: 'Multan', lat: 30.1575, lon: 71.5249 },
             { name: 'Faisalabad', lat: 31.4504, lon: 73.1350 },
-            { name: 'Hyderabad', lat: 25.3960, lon: 68.3578 },
             { name: 'Rawalpindi', lat: 33.5651, lon: 73.0169 },
+            { name: 'Multan', lat: 30.1575, lon: 71.5249 },
+            { name: 'Gujranwala', lat: 32.1877, lon: 74.1945 },
+            { name: 'Sialkot', lat: 32.4945, lon: 74.5229 },
             { name: 'Bahawalpur', lat: 29.3956, lon: 71.6836 },
             { name: 'Sargodha', lat: 32.0836, lon: 72.6711 },
+            { name: 'Sheikhupura', lat: 31.7167, lon: 73.9850 },
+            { name: 'Jhang', lat: 31.2700, lon: 72.3311 },
+            { name: 'Rahim Yar Khan', lat: 28.4212, lon: 70.2989 },
+            { name: 'Gujrat', lat: 32.5731, lon: 74.0755 },
+            { name: 'Sahiwal', lat: 30.6682, lon: 73.1114 },
+            { name: 'Wah Cantonment', lat: 33.7700, lon: 72.7300 },
+            { name: 'Kasur', lat: 31.1156, lon: 74.4462 },
+            { name: 'Okara', lat: 30.8103, lon: 73.4501 },
+            { name: 'Chiniot', lat: 31.7447, lon: 72.9830 },
+            { name: 'Kamoke', lat: 31.9683, lon: 74.2205 },
+            { name: 'Sadiqabad', lat: 28.3124, lon: 70.1314 },
+            { name: 'Burewala', lat: 30.1500, lon: 72.6833 },
+            { name: 'Muridke', lat: 31.8103, lon: 74.2536 },
+            { name: 'Muzaffargarh', lat: 30.0700, lon: 71.1933 },
+            { name: 'Jhelum', lat: 32.9407, lon: 73.7279 },
+            { name: 'Khanewal', lat: 30.3017, lon: 71.9325 },
+            { name: 'Hafizabad', lat: 32.0707, lon: 73.6880 },
+            { name: 'Pakpattan', lat: 30.3423, lon: 73.3904 },
+            { name: 'Jaranwala', lat: 31.3347, lon: 73.4244 },
+            { name: 'Dera Ghazi Khan', lat: 30.0456, lon: 70.6418 },
+            { name: 'Bahawalnagar', lat: 29.9988, lon: 73.2530 },
+            { name: 'Mianwali', lat: 32.5833, lon: 71.5333 },
+            { name: 'Lodhran', lat: 29.5445, lon: 71.6323 },
+            { name: 'Vehari', lat: 30.0428, lon: 72.3583 },
+            { name: 'Attock', lat: 33.7667, lon: 72.3667 },
+            { name: 'Chakwal', lat: 32.9300, lon: 72.8500 },
+            { name: 'Khushab', lat: 32.2989, lon: 72.3483 },
+            { name: 'Bhakkar', lat: 31.6221, lon: 71.0656 },
+            { name: 'Layyah', lat: 30.9678, lon: 70.9428 },
+            { name: 'Rajanpur', lat: 29.1037, lon: 70.3283 },
+            { name: 'Narowal', lat: 32.1000, lon: 74.8700 },
+            { name: 'Mandi Bahauddin', lat: 32.5839, lon: 73.4917 },
+            { name: 'Kot Adu', lat: 30.4730, lon: 70.9663 },
+            { name: 'Gujar Khan', lat: 33.2608, lon: 73.3056 },
+            { name: 'Lalamusa', lat: 32.6972, lon: 73.8569 },
+            { name: 'Kharian', lat: 32.8128, lon: 73.8647 },
+            { name: 'Taxila', lat: 33.7460, lon: 72.8397 },
+            { name: 'Murree', lat: 33.9070, lon: 73.3943 },
+            { name: 'Kamalia', lat: 30.7329, lon: 72.6391 },
+            { name: 'Ahmedpur East', lat: 29.1437, lon: 71.2630 },
+            { name: 'Wazirabad', lat: 32.4432, lon: 74.1296 },
+            { name: 'Daska', lat: 32.3243, lon: 74.5049 },
+            { name: 'Gojra', lat: 31.1500, lon: 72.6833 },
+            { name: 'Jauharabad', lat: 32.4936, lon: 72.5311 },
+            { name: 'Pind Dadan Khan', lat: 32.5854, lon: 73.0450 },
+            { name: 'Isa Khel', lat: 32.5273, lon: 70.9701 },
+            { name: 'Talagang', lat: 32.9294, lon: 72.4189 },
+            { name: 'Kallar Syedan', lat: 33.7297, lon: 73.4681 },
+            { name: 'Fateh Jhang', lat: 33.5703, lon: 72.6450 },
+            { name: 'Pindi Gheb', lat: 33.2422, lon: 72.2636 },
+            { name: 'Sohawa', lat: 33.0906, lon: 73.4150 },
+            { name: 'Dina', lat: 33.0303, lon: 73.5689 },
+            { name: 'Sarai Alamgir', lat: 32.9056, lon: 73.7531 },
+            { name: 'Shorkot', lat: 30.8358, lon: 72.0803 },
+            { name: 'Pir Mahal', lat: 30.7675, lon: 72.4339 },
+            { name: 'Kabirwala', lat: 30.6053, lon: 71.8653 },
+            { name: 'Alipur', lat: 29.3828, lon: 70.9103 },
+            { name: 'Jalalpur Pirwala', lat: 29.5036, lon: 71.9231 },
+            { name: 'Dunyapur', lat: 29.3247, lon: 71.7483 },
+            { name: 'Kahna', lat: 31.3500, lon: 74.3667 },
+            { name: 'Raiwind', lat: 31.2500, lon: 74.3167 },
+            { name: 'Kot Mumin', lat: 32.1500, lon: 73.0333 },
+            { name: 'Bhalwal', lat: 32.2858, lon: 72.8953 },
+            { name: 'Silanwali', lat: 31.8753, lon: 72.5447 },
+            { name: 'Phalia', lat: 32.4278, lon: 73.5283 },
+            { name: 'Malikwal', lat: 32.5539, lon: 73.3089 },
+            { name: 'Sangla Hill', lat: 31.7333, lon: 73.3833 },
+            { name: 'Narang Mandi', lat: 31.9056, lon: 74.8111 },
+            { name: 'Zafarwal', lat: 32.3556, lon: 74.8806 },
+            { name: 'Shakargarh', lat: 32.2619, lon: 75.1611 },
+            { name: 'Pasrur', lat: 32.2592, lon: 74.6625 },
+            { name: 'Sambrial', lat: 32.4750, lon: 74.3528 },
+            { name: 'Kunjah', lat: 32.6167, lon: 73.9667 },
+            { name: 'Lalian', lat: 31.8667, lon: 72.7833 },
+            { name: 'Chichawatni', lat: 30.5283, lon: 72.7019 },
+            { name: 'Arifwala', lat: 30.2917, lon: 73.0650 },
+            { name: 'Mailsi', lat: 29.8000, lon: 72.1833 },
+            { name: 'Hasilpur', lat: 29.6967, lon: 72.5522 },
+            { name: 'Fort Abbas', lat: 29.1917, lon: 72.8528 },
+            { name: 'Chishtian', lat: 29.7958, lon: 72.8578 },
+            { name: 'Haroonabad', lat: 29.6108, lon: 73.1417 },
+            { name: 'Minchinabad', lat: 30.1639, lon: 73.5750 },
+            { name: 'Khanpur', lat: 28.6444, lon: 70.6556 },
+            { name: 'Liaquatpur', lat: 28.9100, lon: 70.9389 },
+            { name: 'Rojhan', lat: 28.6833, lon: 69.4833 },
+            { name: 'Jampur', lat: 29.6417, lon: 70.5903 },
+            { name: 'Taunsa Sharif', lat: 30.7033, lon: 70.6547 },
+
+            // Sindh
+            { name: 'Karachi', lat: 24.8607, lon: 67.0011 },
+            { name: 'Hyderabad', lat: 25.3960, lon: 68.3578 },
             { name: 'Sukkur', lat: 27.7052, lon: 68.8576 },
+            { name: 'Larkana', lat: 27.5590, lon: 68.2120 },
+            { name: 'Nawabshah', lat: 26.2442, lon: 68.4102 },
+            { name: 'Mirpur Khas', lat: 25.5269, lon: 69.0111 },
+            { name: 'Jacobabad', lat: 28.2817, lon: 68.4458 },
+            { name: 'Shikarpur', lat: 27.9556, lon: 68.6381 },
+            { name: 'Khairpur', lat: 27.5292, lon: 68.7597 },
+            { name: 'Dadu', lat: 26.7356, lon: 67.7772 },
+            { name: 'Tando Adam', lat: 25.7667, lon: 68.6500 },
+            { name: 'Tando Allahyar', lat: 25.4622, lon: 68.7167 },
+            { name: 'Umerkot', lat: 25.3547, lon: 69.7414 },
+            { name: 'Badin', lat: 24.6560, lon: 68.8383 },
+            { name: 'Ghotki', lat: 28.0064, lon: 69.3142 },
+            { name: 'Kashmore', lat: 28.4353, lon: 69.5800 },
+            { name: 'Thatta', lat: 24.7461, lon: 67.9239 },
+            { name: 'Sujawal', lat: 24.6067, lon: 68.0778 },
+            { name: 'Kotri', lat: 25.3667, lon: 68.3167 },
+            { name: 'Ranipur', lat: 27.2833, lon: 68.5000 },
+            { name: 'Mehrabpur', lat: 27.1064, lon: 68.0261 },
+            { name: 'Moro', lat: 26.6667, lon: 68.0000 },
+            { name: 'Naushahro Feroze', lat: 26.8433, lon: 68.1228 },
+            { name: 'Hala', lat: 25.8167, lon: 68.4167 },
+            { name: 'Matiari', lat: 25.5992, lon: 68.4467 },
+            { name: 'Tando Muhammad Khan', lat: 25.1222, lon: 68.5361 },
+            { name: 'Shahdadpur', lat: 26.0750, lon: 68.6250 },
+            { name: 'Shahdadkot', lat: 27.8483, lon: 67.9078 },
+            { name: 'Kambar', lat: 27.5881, lon: 68.0028 },
+            { name: 'Warah', lat: 27.4431, lon: 68.1219 },
+            { name: 'Nasirabad Sindh', lat: 27.3500, lon: 68.2167 },
+            { name: 'Ratodero', lat: 27.8014, lon: 68.2861 },
+            { name: 'Thull', lat: 28.2439, lon: 68.7719 },
+            { name: 'Kandhkot', lat: 28.2456, lon: 69.1764 },
+            { name: 'Mirpur Mathelo', lat: 28.0211, lon: 69.5492 },
+            { name: 'Daharki', lat: 28.3969, lon: 69.8167 },
+            { name: 'Ubauro', lat: 28.1636, lon: 69.7303 },
+            { name: 'Rohri', lat: 27.6922, lon: 68.8925 },
+            { name: 'Khairpur Mirs', lat: 27.5292, lon: 68.7597 },
+            { name: 'Gambat', lat: 27.3500, lon: 68.5167 },
+            { name: 'Sanghar', lat: 26.0425, lon: 68.9481 },
+            { name: 'Jamshoro', lat: 25.4283, lon: 68.2758 },
+            { name: 'Sehwan Sharif', lat: 26.4258, lon: 67.8617 },
+            { name: 'Manjhand', lat: 25.9281, lon: 68.2419 },
+            { name: 'Thana Bula Khan', lat: 25.3375, lon: 67.8358 },
+            { name: 'Matli', lat: 25.0489, lon: 68.6531 },
+            { name: 'Tando Bago', lat: 24.7878, lon: 68.9583 },
+            { name: 'Golarchi', lat: 24.5167, lon: 68.4833 },
+            { name: 'Mirpur Sakro', lat: 24.5500, lon: 67.6333 },
+            { name: 'Shah Bunder', lat: 24.1750, lon: 67.8861 },
+            { name: 'Mithi', lat: 24.2594, lon: 69.7981 },
+            { name: 'Islamkot', lat: 24.7019, lon: 69.7828 },
+            { name: 'Diplo', lat: 24.4744, lon: 69.5819 },
+            { name: 'Chachro', lat: 25.1667, lon: 69.7833 },
+            { name: 'Nagarparkar', lat: 24.3567, lon: 70.7483 },
+            { name: 'Kunri', lat: 25.1656, lon: 69.1622 },
+
+            // Khyber Pakhtunkhwa (KPK)
+            { name: 'Peshawar', lat: 34.0151, lon: 71.5249 },
+            { name: 'Mardan', lat: 34.1989, lon: 72.0407 },
+            { name: 'Swat Mingora', lat: 34.7717, lon: 72.3600 },
             { name: 'Abbottabad', lat: 34.1463, lon: 73.2116 },
-            { name: 'Swat', lat: 34.7416, lon: 72.3553 },
+            { name: 'Mansehra', lat: 34.3333, lon: 73.2000 },
+            { name: 'Haripur', lat: 33.9991, lon: 72.9340 },
+            { name: 'Bannu', lat: 32.9889, lon: 70.6056 },
+            { name: 'Kohat', lat: 33.5889, lon: 71.4417 },
+            { name: 'Charsadda', lat: 34.1483, lon: 71.7417 },
+            { name: 'Dera Ismail Khan', lat: 31.8310, lon: 70.9017 },
+            { name: 'Swabi', lat: 34.1167, lon: 72.4667 },
+            { name: 'Nowshera', lat: 34.0158, lon: 71.9814 },
+            { name: 'Timergara', lat: 34.8267, lon: 71.8417 },
+            { name: 'Dir', lat: 35.2042, lon: 71.8786 },
+            { name: 'Chitral', lat: 35.8518, lon: 71.7864 },
+            { name: 'Kohistan', lat: 35.1000, lon: 73.2000 },
+            { name: 'Shangla', lat: 34.9000, lon: 72.6333 },
+            { name: 'Buner', lat: 34.3981, lon: 72.6156 },
+            { name: 'Malakand', lat: 34.5622, lon: 71.9325 },
+            { name: 'Battagram', lat: 34.6789, lon: 73.0292 },
+            { name: 'Torghar', lat: 34.5500, lon: 72.9500 },
+            { name: 'Lakki Marwat', lat: 32.6078, lon: 70.9114 },
+            { name: 'Tank KPK', lat: 32.2217, lon: 70.3833 },
+            { name: 'Hangu', lat: 33.5283, lon: 71.0583 },
+            { name: 'Karak', lat: 33.1111, lon: 71.0931 },
+            { name: 'Pabbi', lat: 34.0042, lon: 71.8028 },
+            { name: 'Jehangira', lat: 33.9167, lon: 72.2000 },
+            { name: 'Risalpur', lat: 34.0667, lon: 71.9833 },
+            { name: 'Akora Khattak', lat: 33.9833, lon: 72.1333 },
+            { name: 'Topi', lat: 34.0667, lon: 72.6167 },
+            { name: 'Takht-e-Bhai', lat: 34.2708, lon: 71.9536 },
+            { name: 'Katlang', lat: 34.3556, lon: 72.0806 },
+            { name: 'Sarai Naurang', lat: 32.8422, lon: 70.7719 },
+            { name: 'Mir Ali', lat: 32.9833, lon: 70.2667 },
+            { name: 'Miranshah', lat: 33.0019, lon: 70.0658 },
+            { name: 'Wana', lat: 32.3017, lon: 69.5714 },
+            { name: 'Parachinar', lat: 33.8989, lon: 70.1011 },
+            { name: 'Thall', lat: 33.4833, lon: 70.5667 },
+            { name: 'Lachi', lat: 33.3761, lon: 71.3503 },
+            { name: 'Kulachi', lat: 31.9472, lon: 70.4608 },
+            { name: 'Paharpur', lat: 32.1000, lon: 70.9667 },
+            { name: 'Batkhela', lat: 34.6192, lon: 71.9739 },
+            { name: 'Dargai', lat: 34.5000, lon: 71.9333 },
+            { name: 'Chakdara', lat: 34.6578, lon: 72.0225 },
+            { name: 'Upper Dir', lat: 35.2167, lon: 71.8833 },
+            { name: 'Drosh', lat: 35.5606, lon: 71.7881 },
+            { name: 'Booni', lat: 36.3028, lon: 72.5389 },
+
+            // Balochistan
+            { name: 'Quetta', lat: 30.1798, lon: 66.9750 },
             { name: 'Gwadar', lat: 25.1216, lon: 62.3254 },
+            { name: 'Turbat', lat: 26.0012, lon: 63.0390 },
+            { name: 'Khuzdar', lat: 27.8022, lon: 66.6200 },
+            { name: 'Hub Balochistan', lat: 25.9905, lon: 66.8860 },
+            { name: 'Chaman', lat: 30.9214, lon: 66.4478 },
+            { name: 'Pishin', lat: 30.5842, lon: 66.9953 },
+            { name: 'Loralai', lat: 30.3705, lon: 68.5980 },
+            { name: 'Zhob', lat: 31.3408, lon: 69.4493 },
+            { name: 'Sibi', lat: 29.5443, lon: 67.8774 },
+            { name: 'Dera Murad Jamali', lat: 28.5466, lon: 68.2230 },
+            { name: 'Dera Allahyar', lat: 28.3756, lon: 68.3514 },
+            { name: 'Usta Muhammad', lat: 28.1828, lon: 68.0436 },
+            { name: 'Nasirabad Balochistan', lat: 28.4000, lon: 68.3167 },
+            { name: 'Jaffarabad', lat: 28.4000, lon: 68.4167 },
+            { name: 'Jhal Magsi', lat: 28.5000, lon: 67.2500 },
+            { name: 'Mastung', lat: 29.7997, lon: 66.8450 },
+            { name: 'Kalat', lat: 29.0267, lon: 66.5878 },
+            { name: 'Surab', lat: 28.4867, lon: 66.2650 },
+            { name: 'Noshki', lat: 29.5544, lon: 66.0125 },
+            { name: 'Chagai', lat: 29.2933, lon: 61.3400 },
+            { name: 'Dalbandin', lat: 28.8906, lon: 64.4056 },
+            { name: 'Kharan', lat: 28.5833, lon: 65.4167 },
+            { name: 'Washuk', lat: 27.8333, lon: 65.1667 },
+            { name: 'Panjgur', lat: 26.9758, lon: 64.0958 },
+            { name: 'Awaran', lat: 26.4678, lon: 65.2358 },
+            { name: 'Lasbela', lat: 25.9905, lon: 66.3150 },
+            { name: 'Bela', lat: 26.2333, lon: 66.3167 },
+            { name: 'Uthal', lat: 25.8078, lon: 66.6219 },
+            { name: 'Sonmiani', lat: 25.4294, lon: 66.5744 },
+            { name: 'Ormara', lat: 25.2083, lon: 64.6333 },
+            { name: 'Pasni', lat: 25.2631, lon: 63.4739 },
+            { name: 'Jiwani', lat: 25.0447, lon: 61.7456 },
+            { name: 'Harnai', lat: 30.1000, lon: 67.9333 },
+            { name: 'Ziarat', lat: 30.3828, lon: 67.7256 },
+            { name: 'Sanjawi', lat: 30.5333, lon: 68.3667 },
+            { name: 'Musakhail', lat: 30.8833, lon: 69.8167 },
+            { name: 'Barkhan', lat: 29.8972, lon: 69.5256 },
+            { name: 'Kohlu', lat: 29.8994, lon: 69.2483 },
+            { name: 'Dera Bugti', lat: 29.0361, lon: 69.1553 },
+            { name: 'Sui', lat: 28.6333, lon: 69.1833 },
+            { name: 'Sohbatpur', lat: 28.3267, lon: 68.3972 },
+            { name: 'Sherani', lat: 31.5000, lon: 69.6667 },
+            { name: 'Killa Saifullah', lat: 30.7019, lon: 68.3603 },
+            { name: 'Killa Abdullah', lat: 30.7292, lon: 66.6631 },
+            { name: 'Gulistan', lat: 30.5667, lon: 66.4833 },
+
+            // Azad Jammu & Kashmir (AJK)
             { name: 'Muzaffarabad', lat: 34.3700, lon: 73.4708 },
+            { name: 'Mirpur AJK', lat: 33.1481, lon: 73.7533 },
+            { name: 'Rawalakot', lat: 33.8569, lon: 73.7628 },
+            { name: 'Kotli AJK', lat: 33.5156, lon: 73.9028 },
+            { name: 'Bhimber', lat: 32.9792, lon: 74.0753 },
+            { name: 'Bagh', lat: 33.9811, lon: 73.7781 },
+            { name: 'Pallandri', lat: 33.7083, lon: 73.6917 },
+            { name: 'Haveli', lat: 33.8500, lon: 73.9667 },
+            { name: 'Hattian Bala', lat: 34.1681, lon: 73.7431 },
+            { name: 'Sudhnoti', lat: 33.7333, lon: 73.7167 },
+            { name: 'Dadyal', lat: 33.2083, lon: 73.6333 },
+            { name: 'Chakswari', lat: 33.1700, lon: 73.8500 },
+            { name: 'Islamgarh', lat: 33.2333, lon: 73.8000 },
+            { name: 'Athmuqam', lat: 34.5714, lon: 73.8953 },
+            { name: 'Sharda', lat: 34.7933, lon: 74.1883 },
+            { name: 'Kel', lat: 34.8219, lon: 74.3411 },
+            { name: 'Leepa Valley', lat: 34.1833, lon: 73.8833 },
+            { name: 'Forward Kahuta', lat: 33.8667, lon: 73.9333 },
+            { name: 'Hajira', lat: 33.7500, lon: 73.9000 },
+            { name: 'Abbaspur', lat: 33.7833, lon: 73.9500 },
+            { name: 'Khuiratta', lat: 33.3833, lon: 73.8667 },
+            { name: 'Nakyal', lat: 33.3667, lon: 73.9167 },
+            { name: 'Sehnsa', lat: 33.4833, lon: 73.6667 },
+
+            // Gilgit-Baltistan (GB)
             { name: 'Gilgit', lat: 35.9208, lon: 74.3083 },
             { name: 'Skardu', lat: 35.2971, lon: 75.6333 },
-            { name: 'Dera Ismail Khan', lat: 31.8310, lon: 70.9017 },
-            { name: 'Turbat', lat: 26.0012, lon: 63.0390 }
+            { name: 'Hunza Aliabad', lat: 36.3167, lon: 74.6500 },
+            { name: 'Chilas', lat: 35.4253, lon: 74.1033 },
+            { name: 'Diamer', lat: 35.3500, lon: 73.8500 },
+            { name: 'Astore', lat: 35.3667, lon: 74.9000 },
+            { name: 'Ghizer', lat: 36.2500, lon: 73.4000 },
+            { name: 'Gupis', lat: 36.2208, lon: 73.4069 },
+            { name: 'Yasin', lat: 36.3644, lon: 73.2842 },
+            { name: 'Ishkoman', lat: 36.5000, lon: 73.6667 },
+            { name: 'Nagar Khas', lat: 36.1969, lon: 74.6181 },
+            { name: 'Khaplu', lat: 35.1569, lon: 76.3350 },
+            { name: 'Ghanche', lat: 35.2000, lon: 76.3000 },
+            { name: 'Shigar', lat: 35.4333, lon: 75.7333 },
+            { name: 'Kharmang', lat: 34.9500, lon: 76.1000 },
+            { name: 'Rondu', lat: 35.5333, lon: 75.3167 },
+            { name: 'Karimabad', lat: 36.3167, lon: 74.6667 },
+            { name: 'Gulmit', lat: 36.4167, lon: 74.8333 },
+            { name: 'Passu', lat: 36.4833, lon: 74.8833 },
+            { name: 'Sust', lat: 36.7292, lon: 74.8708 },
+            { name: 'Minimerg', lat: 34.9500, lon: 75.1833 },
+            { name: 'Deosai', lat: 35.0333, lon: 75.3667 }
         ];
 
+        function getNearestHubName(lat, lon) {
+            let nearest = pakistanMajorHubs[0];
+            let minDistance = Infinity;
+            pakistanMajorHubs.forEach(hub => {
+                const dist = Math.hypot(hub.lat - lat, hub.lon - lon);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    nearest = hub;
+                }
+            });
+            return nearest.name;
+        }
+
         function initMap() {
-            map = L.map('map', { minZoom: 3 }).setView([currentCity.lat, currentCity.lon], 7);
+            map = L.map('map', { minZoom: 3, preferCanvas: true }).setView([currentCity.lat, currentCity.lon], 7);
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors',
@@ -895,27 +1186,25 @@
 
             alertMarkersLayer.addTo(map);
 
+            // Clicking map inspects location & displays exact local town/city name + live temperature popup
             map.on('click', async function(e) {
                 const { lat, lng } = e.latlng;
                 if (isAllAlertsMode) {
                     toggleAllPakistanAlertsMode();
                 }
                 
+                const placeName = getNearestHubName(lat, lng);
+
                 try {
-                    const cacheKey = `geo_rev_${lat.toFixed(3)}_${lng.toFixed(3)}`;
-                    let placeName = null;
-                    const cachedGeo = sessionStorage.getItem(cacheKey);
-                    if (cachedGeo) {
-                        placeName = JSON.parse(cachedGeo);
-                    } else {
-                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-                        const data = await res.json();
-                        placeName = data.address.city || data.address.town || data.address.village || data.address.state || "Custom Location";
-                        sessionStorage.setItem(cacheKey, JSON.stringify(placeName));
-                    }
-                    selectCustomLocation(placeName, lat, lng);
+                    const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code&timezone=auto`);
+                    const weatherData = await weatherRes.json();
+                    const temp = weatherData.current ? weatherData.current.temperature_2m : 25.0;
+                    const code = weatherData.current ? weatherData.current.weather_code : 0;
+                    const cond = code >= 51 ? 'Rainfall' : (code === 3 ? 'Cloudy' : 'Clear Skies');
+
+                    selectCustomLocation(placeName, lat, lng, temp, cond);
                 } catch(err) {
-                    selectCustomLocation("Pinned Location", lat, lng);
+                    selectCustomLocation(placeName, lat, lng, 25.0, 'Clear Skies');
                 }
             });
 
@@ -923,7 +1212,7 @@
             updateMapLocation();
         }
 
-        function updateMapLocation() {
+        function updateMapLocation(customTemp = null, customCond = null) {
             if (mapMarker) map.removeLayer(mapMarker);
             if (radarCircle) map.removeLayer(radarCircle);
             alertMarkersLayer.clearLayers();
@@ -936,13 +1225,16 @@
 
             map.setView([currentCity.lat, currentCity.lon], 7, { animate: true });
 
+            const tempStr = customTemp !== null ? `${customTemp.toFixed(1)}°C` : 'Live Temp';
+            const condStr = customCond !== null ? customCond : 'Active Location';
+
             mapMarker = L.circleMarker([currentCity.lat, currentCity.lon], {
-                radius: 10,
+                radius: 11,
                 fillColor: '#00b4d8',
                 color: '#ffffff',
                 weight: 2,
-                fillOpacity: 0.9
-            }).bindPopup(`<b>${currentCity.name}</b><br>Active Inspection Point`).addTo(map);
+                fillOpacity: 0.95
+            }).bindPopup(`<b>${currentCity.name}</b><br><i class="fa-solid fa-temperature-half" style="color: #ef233c;"></i> <b>${tempStr}</b> (${condStr})`).addTo(map);
 
             radarCircle = L.circle([currentCity.lat, currentCity.lon], {
                 radius: 30000,
@@ -953,30 +1245,43 @@
             }).addTo(map);
         }
 
-        function selectCustomLocation(name, lat, lon) {
+        function selectCustomLocation(name, lat, lon, customTemp = null, customCond = null) {
             currentCity = { name, lat, lon };
             localStorage.setItem('pk_weather_currentCity', JSON.stringify(currentCity));
             document.getElementById('locationSearchInput').value = name;
             fetchWeatherData();
-            updateMapLocation();
+            updateMapLocation(customTemp, customCond);
+            if (mapMarker) {
+                mapMarker.openPopup();
+            }
         }
 
         async function executeSearch() {
-            const query = document.getElementById('locationSearchInput').value.trim();
-            if(!query) return;
+            const rawQuery = document.getElementById('locationSearchInput').value.trim();
+            if(!rawQuery) return;
+            const queryLower = rawQuery.toLowerCase();
 
+            // 1. Local hub & district check (Instant & Reliable)
+            const matchedHub = pakistanMajorHubs.find(h => h.name.toLowerCase().includes(queryLower) || queryLower.includes(h.name.toLowerCase()));
+            if (matchedHub) {
+                selectCustomLocation(matchedHub.name, matchedHub.lat, matchedHub.lon);
+                return;
+            }
+
+            // 2. Open-Meteo Geocoding API (Robust, CORS-enabled, never gets blocked)
             try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Pakistan')}`);
+                const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(rawQuery)}&count=5&language=en&format=json`);
                 const data = await res.json();
-                if(data && data.length > 0) {
-                    const { lat, lon, display_name } = data[0];
-                    const shortName = display_name.split(',')[0];
-                    selectCustomLocation(shortName, parseFloat(lat), parseFloat(lon));
+                
+                if (data && data.results && data.results.length > 0) {
+                    const pkResult = data.results.find(r => r.country_code === 'PK' || (r.country && r.country.toLowerCase().includes('pakistan'))) || data.results[0];
+                    selectCustomLocation(pkResult.name, pkResult.latitude, pkResult.longitude);
                 } else {
-                    alert('Location not found.');
+                    alert('Location not found in Pakistan. Please try another city name (e.g. Mandi Bahauddin, Chiniot, Mianwali).');
                 }
             } catch(e) {
-                console.error(e);
+                console.error('Search error:', e);
+                alert('Unable to connect to location search service. Please check your network connection.');
             }
         }
 
@@ -1174,7 +1479,7 @@
             document.getElementById('modalAlertDesc').innerText = alertData.desc + " Evaluated using live meteorological data streams.";
             document.getElementById('modalAlertTime').innerText = alertData.time;
             document.getElementById('modalAlertDuration').innerText = alertData.duration;
-            document.getElementById('modalAlertSeverity').innerText = alertData.severity + ' Risk (Pure Logic Evaluated)';
+            document.getElementById('modalAlertSeverity').innerText = alertData.severity + ' Risk';
             document.getElementById('modalAlertAction').innerText = alertData.action;
 
             let iconColor = 'var(--accent-amber)';
@@ -1200,10 +1505,10 @@
             const dateObj = new Date(dateStr);
             const dayFormatted = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
-            let cond = 'Clear Skies & Sunny';
+            let cond = 'Clear Skies';
             let prob = '10%';
-            if(rainSum > 10) { cond = 'Rain Showers'; prob = '80%'; }
-            else if(rainSum > 0) { cond = 'Cloudy Intervals'; prob = '35%'; }
+            if(rainSum > 10) { cond = 'Rainfall'; prob = '80%'; }
+            else if(rainSum > 0) { cond = 'Cloudy'; prob = '35%'; }
             else if(maxT > 38) { cond = 'Sunny & Hot'; prob = '5%'; }
 
             document.getElementById('modalForecastDay').innerText = dayFormatted;
@@ -1230,7 +1535,6 @@
             document.getElementById('currentCityName').innerHTML = `<i class="fa-solid fa-location-dot" style="color: var(--primary-blue);"></i> ${name}`;
             document.getElementById('currentTimestamp').innerText = `Updated: ${new Date().toLocaleTimeString()} (Open-Meteo Live)`;
 
-            // Non-functional latency & performance optimization: Local Cache with TTL check (5 minutes)
             const cacheKey = `weather_cache_${lat.toFixed(2)}_${lon.toFixed(2)}`;
             const cachedRecord = sessionStorage.getItem(cacheKey);
             let data = null;
@@ -1256,8 +1560,6 @@
                     }));
                 }
 
-                lastFetchedWeatherData = data;
-
                 const cur = data.current;
                 let temp = cur.temperature_2m;
                 let feels = cur.apparent_temperature;
@@ -1271,35 +1573,33 @@
 
                 document.getElementById('heroMainTemp').innerText = `${temp.toFixed(1)}°C`;
                 
-                // Determine Day vs Night (Nighttime: before 6 AM or after 6 PM)
                 const currentHour = new Date().getHours();
                 const isNight = currentHour < 6 || currentHour >= 18;
 
-                let conditionText = isNight ? 'Clear Night' : 'Clear Skies';
+                let conditionText = 'Clear Skies';
                 let iconClass = isNight ? 'fa-moon' : 'fa-sun';
                 let iconColor = isNight ? 'var(--primary-blue)' : 'var(--accent-amber)';
 
-                // Dynamic WMO Weather Code / Condition interpretation
                 if (weatherCode >= 51 && weatherCode <= 67 || weatherCode >= 80 && weatherCode <= 82 || rain > 0.5) {
-                    conditionText = 'Rainfall & Showers';
+                    conditionText = 'Rainfall';
                     iconClass = 'fa-cloud-showers-heavy';
                     iconColor = 'var(--primary-blue)';
                 } else if (weatherCode >= 95) {
-                    conditionText = 'Thunderstorm Alert';
+                    conditionText = 'Thunderstorm';
                     iconClass = 'fa-bolt';
                     iconColor = 'var(--accent-purple)';
                 } else if (weatherCode === 3 || cloud > 70) {
-                    conditionText = 'Overcast & Cloudy';
+                    conditionText = 'Cloudy';
                     iconClass = 'fa-cloud';
                     iconColor = 'var(--text-muted)';
                 } else if (weatherCode === 1 || weatherCode === 2 || (cloud > 20 && cloud <= 70)) {
-                    conditionText = isNight ? 'Partly Cloudy Night' : 'Partly Cloudy';
+                    conditionText = 'Partly Cloudy';
                     iconClass = isNight ? 'fa-cloud-moon' : 'fa-cloud-sun';
                     iconColor = 'var(--accent-amber)';
-                } else if (!isNight && temp >= 38) {
-                    conditionText = 'Sunny & Hot';
-                    iconClass = 'fa-temperature-high';
-                    iconColor = 'var(--accent-rose)';
+                } else {
+                    conditionText = 'Clear Skies';
+                    iconClass = isNight ? 'fa-moon' : 'fa-sun';
+                    iconColor = isNight ? 'var(--primary-blue)' : 'var(--accent-amber)';
                 }
 
                 document.getElementById('heroConditionText').innerText = conditionText;
@@ -1327,7 +1627,6 @@
 
             } catch (err) {
                 console.warn("Fallback rendering", err);
-                fallbackWeatherRender(name, lat, lon);
             }
         }
 
@@ -1371,22 +1670,6 @@
                     alertContainer.appendChild(div);
                 });
             }
-        }
-
-        function fallbackWeatherRender(cityName, lat, lon) {
-            document.getElementById('heroMainTemp').innerText = '29.6°C';
-            document.getElementById('heroConditionText').innerText = 'Clear Skies';
-            document.getElementById('metricConditionBox').innerText = 'Clear Skies';
-            document.getElementById('metricFeels').innerText = '36.7°C';
-            document.getElementById('metricHumidity').innerText = '82%';
-            document.getElementById('metricWind').innerText = '3.1 km/h';
-            document.getElementById('metricRain').innerText = '0.0 mm';
-            document.getElementById('metricCloud').innerText = '12%';
-            document.getElementById('metricPressure').innerText = '941.9 hPa';
-            document.getElementById('metricVisibility').innerText = '10 km';
-            document.getElementById('metricAQI').innerText = 'Moderate (52 AQI)';
-            
-            processAndRenderDynamicAlerts(29.6, 0.0, 3.1, 82, cityName, lat, lon);
         }
 
         function renderPresentHourlyChart(hourlyData) {
@@ -1493,12 +1776,12 @@
                 const minT = tempsMin[i] || 23;
                 const rSum = rainSums[i] || 0;
                 
-                let cond = 'Sunny';
+                let cond = 'Clear Skies';
                 let icon = '<i class="fa-solid fa-sun" style="color: var(--accent-amber);"></i>';
                 let prob = '10%';
 
                 if (rSum > 10) {
-                    cond = 'Rain Showers';
+                    cond = 'Rainfall';
                     icon = '<i class="fa-solid fa-cloud-showers-heavy" style="color: var(--primary-blue);"></i>';
                     prob = '75%';
                 } else if (rSum > 0) {
@@ -1506,7 +1789,7 @@
                     icon = '<i class="fa-solid fa-cloud" style="color: var(--text-muted);"></i>';
                     prob = '30%';
                 } else if (maxT > 38) {
-                    cond = 'Hot & Sunny';
+                    cond = 'Sunny & Hot';
                     icon = '<i class="fa-solid fa-temperature-high" style="color: var(--accent-rose);"></i>';
                     prob = '5%';
                 }
