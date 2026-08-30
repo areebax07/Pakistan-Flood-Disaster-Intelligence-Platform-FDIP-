@@ -866,7 +866,8 @@
         function openModal(quake, depth, lat, lon, intensityText) {
             const mag = Number(quake.mag);
             document.getElementById('modalLocationName').innerText = quake.place;
-            document.getElementById('modalDateTime').innerText = `Timestamp: ${new Date(quake.time).toUTCString()} | Exact Coordinates: ${lat}°N, ${lon}°E`;
+            // Fixed timestamp to use local time string matching the feed card instead of UTC string
+            document.getElementById('modalDateTime').innerText = `Timestamp: ${new Date(quake.time).toLocaleString()} | Exact Coordinates: ${lat}°N, ${lon}°E`;
             document.getElementById('modalMagVal').innerText = `${mag.toFixed(1)} Richter`;
             document.getElementById('modalDepthVal').innerText = `${depth} km deep`;
 
