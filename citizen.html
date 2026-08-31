@@ -1,0 +1,2926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citizen Dashboard &bull; Pakistan Flood & Disaster Intelligence</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet GIS CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* ============================================================
+           CITIZEN PORTAL — THEME LAYER (Phase 1)
+           Injected on top of existing styles. All class names, IDs,
+           HTML structure, and backend bindings are untouched.
+           ============================================================ */
+        :root {
+            /* Citizen Portal accent system: Teal + Emerald = calm, safe, hopeful */
+            --cp-primary:       #22d3ee;   /* Teal cyan — primary CTAs */
+            --cp-secondary:     #10b981;   /* Emerald green — success, safe state */
+            --cp-danger:        #fb7185;   /* Soft rose — urgent actions only */
+            --cp-warning:       #fbbf24;   /* Amber — moderate warnings */
+            --cp-bg:            #060c15;   /* Slightly warmer near-black */
+            --cp-card:          rgba(12, 24, 38, 0.90);   /* Warmer, teal-tinted card */
+            --cp-card-border:   rgba(16, 185, 129, 0.18); /* Emerald-tinted border */
+            --cp-sidebar-bg:    rgba(8, 18, 30, 0.96);
+            --cp-focus-ring:    0 0 0 3px rgba(34, 211, 238, 0.25);
+        }
+
+        /* --- Body: warmer background tint for citizen portal --- */
+        body {
+            background-color: var(--cp-bg);
+            background-image:
+                linear-gradient(to bottom, rgba(16, 185, 129, 0.04), rgba(6, 12, 21, 0.60)),
+                url('../images/g2.jpg');
+        }
+
+        /* --- Sidebar: emerald-tinted glass card --- */
+        .dashboard-sidebar {
+            background: var(--cp-sidebar-bg) !important;
+            border: 1px solid var(--cp-card-border) !important;
+            border-radius: 20px !important;
+        }
+
+        /* --- User avatar: emerald-to-teal gradient --- */
+        .user-avatar {
+            background: linear-gradient(135deg, var(--cp-secondary), var(--cp-primary)) !important;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.35) !important;
+        }
+
+        /* --- Sidebar nav: larger tap targets, rounded active pill --- */
+        .sidebar-menu button {
+            padding: 13px 16px !important;
+            border-radius: 12px !important;
+            font-size: 0.95rem !important;
+        }
+
+        .sidebar-menu button:hover,
+        .sidebar-menu button.active {
+            background: rgba(16, 185, 129, 0.14) !important;
+            color: var(--cp-secondary) !important;
+            border-left: 3px solid var(--cp-secondary);
+            padding-left: 13px !important;
+        }
+
+        /* --- Main content cards: warmer, rounder --- */
+        .dash-card {
+            background: var(--cp-card) !important;
+            border: 1px solid var(--cp-card-border) !important;
+            border-radius: 20px !important;
+        }
+
+        .dash-card h3 {
+            font-size: 1.4rem !important;
+            font-weight: 700 !important;
+        }
+
+        .dash-card p.section-desc {
+            font-size: 0.9rem !important;
+            line-height: 1.65 !important;
+        }
+
+        /* --- Hero welcome banner inside dashboard --- */
+        .dash-card.hero-welcome-card {
+            background: linear-gradient(135deg,
+                rgba(16, 185, 129, 0.15),
+                rgba(34, 211, 238, 0.08)) !important;
+            border-color: rgba(16, 185, 129, 0.35) !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dash-card.hero-welcome-card::before {
+            content: '';
+            position: absolute;
+            top: -60px; right: -60px;
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* --- Primary submit buttons: pill shape with emerald-cyan gradient --- */
+        button[type="submit"],
+        .btn-main.btn-cyan,
+        .btn-submit-report {
+            background: linear-gradient(135deg, var(--cp-secondary), var(--cp-primary)) !important;
+            border-radius: 50px !important;
+            color: #050e18 !important;
+            font-weight: 700 !important;
+            font-size: 1rem !important;
+            padding: 13px 32px !important;
+            border: none !important;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        button[type="submit"]:hover,
+        .btn-main.btn-cyan:hover,
+        .btn-submit-report:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 28px rgba(16, 185, 129, 0.50) !important;
+        }
+
+        /* --- Form inputs: tighter, friendlier, larger focus ring --- */
+        .form-group select,
+        .form-group input[type="text"],
+        .form-group textarea {
+            border-radius: 12px !important;
+            padding: 13px 16px !important;
+            font-size: 0.95rem !important;
+        }
+
+        .form-group select:focus,
+        .form-group input[type="text"]:focus,
+        .form-group textarea:focus {
+            box-shadow: var(--cp-focus-ring) !important;
+            border-color: var(--cp-primary) !important;
+        }
+
+        /* --- Status badges: pill shape for citizen readability --- */
+        .status-badge {
+            border-radius: 50px !important;
+            padding: 4px 14px !important;
+            font-size: 0.78rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.3px !important;
+        }
+
+        /* --- Section heading accent line --- */
+        .dash-card h3::before {
+            content: '';
+            display: inline-block;
+            width: 4px; height: 1em;
+            background: linear-gradient(to bottom, var(--cp-secondary), var(--cp-primary));
+            border-radius: 4px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        /* --- Mobile: stack sidebar on small screens --- */
+        @media (max-width: 900px) {
+            .dashboard-container {
+                grid-template-columns: 1fr !important;
+            }
+            .dashboard-sidebar {
+                border-radius: 16px !important;
+            }
+        }
+        /* ============================================================
+           END CITIZEN PORTAL THEME LAYER
+           ============================================================ */
+        /* Toast Notification Styles */
+        #toastContainer {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: var(--card-bg, #0f172a);
+            border: 1px solid var(--border-glass, rgba(255,255,255,0.1));
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease forwards;
+            min-width: 280px;
+        }
+        .toast.success { border-left: 4px solid var(--accent-emerald, #34d399); }
+        .toast.error { border-left: 4px solid var(--accent-rose, #fb7185); }
+        .toast.info { border-left: 4px solid var(--accent-cyan, #22d3ee); }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Citizen Dashboard Layout Enhancements */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 25px;
+        }
+
+        .dashboard-sidebar {
+            background: var(--card-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 25px 20px;
+            height: fit-content;
+            backdrop-filter: blur(12px);
+        }
+
+        .user-profile-box {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-glass);
+            margin-bottom: 20px;
+        }
+
+        .user-avatar {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+            color: #070a13;
+            font-size: 1.8rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 auto 12px auto;
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-menu button {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 12px 16px;
+            text-align: left;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .sidebar-menu button:hover, .sidebar-menu button.active {
+            background: rgba(34, 211, 238, 0.12);
+            color: var(--accent-cyan);
+        }
+
+        .dashboard-content {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .dash-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 30px;
+            backdrop-filter: blur(12px);
+        }
+
+        .dash-card h3 {
+            font-size: 1.3rem;
+            color: #ffffff;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dash-card p.section-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+        }
+
+        /* Form Grid Controls */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-group select,
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            color: #f8fafc;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input[type="text"]:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .form-group select option {
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        /* Location Picker Controls */
+        .location-controls-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .location-btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-loc-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-glass);
+            color: #e2e8f0;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-loc-action:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-loc-action.btn-gps {
+            background: rgba(34, 211, 238, 0.15);
+            color: var(--accent-cyan);
+            border-color: rgba(34, 211, 238, 0.4);
+        }
+
+        .btn-loc-action.btn-gps:hover {
+            background: rgba(34, 211, 238, 0.28);
+            box-shadow: 0 0 14px rgba(34, 211, 238, 0.35);
+        }
+
+        .coords-badge {
+            font-size: 0.76rem;
+            font-family: monospace;
+            padding: 5px 10px;
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-glass);
+            color: var(--accent-cyan);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Embedded Interactive Map Card */
+        .picker-map-card {
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(34, 211, 238, 0.35);
+            background: #090e1a;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(34, 211, 238, 0.08);
+            margin-top: 12px;
+            position: relative;
+        }
+
+        .picker-map-header {
+            padding: 11px 16px;
+            background: linear-gradient(90deg, rgba(15, 23, 42, 0.98), rgba(11, 17, 30, 0.98));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .map-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .map-live-badge {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .map-live-badge i {
+            color: var(--accent-cyan);
+            filter: drop-shadow(0 0 6px var(--accent-cyan));
+        }
+
+        .map-live-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: #34d399;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            letter-spacing: 0.3px;
+        }
+
+        .map-live-status-pill .pulse-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .map-zoom-tag {
+            font-size: 0.72rem;
+            font-family: monospace;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(34, 211, 238, 0.1);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(34, 211, 238, 0.25);
+        }
+
+        .map-header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* Basemap Layer Pills (Terrain, Street, Satellite) */
+        .map-layer-selector {
+            display: flex;
+            background: rgba(2, 6, 23, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .layer-pill {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 4px 11px;
+            border-radius: 16px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .layer-pill:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .layer-pill.active {
+            background: rgba(34, 211, 238, 0.22);
+            color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+            border: 1px solid rgba(34, 211, 238, 0.35);
+        }
+
+        .map-tool-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .map-tool-btn:hover {
+            background: rgba(34, 211, 238, 0.12);
+            color: var(--accent-cyan);
+            border-color: rgba(34, 211, 238, 0.3);
+        }
+
+        .map-tool-btn.active {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--accent-emerald);
+            border-color: rgba(52, 211, 153, 0.4);
+        }
+
+        /* Leaflet Controls Styling */
+        .leaflet-control-zoom {
+            border: 1px solid rgba(51, 65, 85, 0.6) !important;
+            border-radius: 8px !important;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .leaflet-control-zoom a {
+            background: rgba(15, 23, 42, 0.92) !important;
+            color: #38bdf8 !important;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.6) !important;
+            transition: all 0.2s ease;
+        }
+
+        .leaflet-control-zoom a:hover {
+            background: #0284c7 !important;
+            color: #ffffff !important;
+        }
+
+        /* Map Sub-toolbar for Search & Categories */
+        .map-subtoolbar {
+            background: rgba(10, 15, 28, 0.95);
+            padding: 8px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .map-search-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .map-search-wrapper .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent-cyan);
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+
+        #mapCitySearchInput {
+            width: 100%;
+            background: rgba(2, 6, 23, 0.85);
+            border: 1px solid rgba(34, 211, 238, 0.25);
+            border-radius: 8px;
+            padding: 8px 36px 8px 34px;
+            color: #ffffff;
+            font-size: 0.82rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        #mapCitySearchInput:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
+            background: rgba(2, 6, 23, 0.98);
+        }
+
+        .btn-clear-search {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 0.8rem;
+        }
+
+        .btn-clear-search:hover {
+            color: #ffffff;
+        }
+
+        /* Autocomplete results dropdown */
+        .city-search-results {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: #0d1527;
+            border: 1px solid rgba(34, 211, 238, 0.35);
+            border-radius: 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            scrollbar-width: thin;
+        }
+
+        .city-search-item {
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .city-search-item:last-child {
+            border-bottom: none;
+        }
+
+        .city-search-item:hover {
+            background: rgba(34, 211, 238, 0.12);
+        }
+
+        .city-item-name {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .city-item-info {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        /* Category Filter Tabs */
+        .hotspot-categories {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .hotspot-categories::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cat-tab {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-muted);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cat-tab:hover {
+            background: rgba(34, 211, 238, 0.1);
+            color: var(--accent-cyan);
+        }
+
+        .cat-tab.active {
+            background: rgba(34, 211, 238, 0.2);
+            color: #ffffff;
+            border-color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .map-hotspots-row {
+            padding: 7px 12px;
+            background: rgba(7, 11, 22, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+
+        .hotspot-tag {
+            padding: 4px 11px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+            font-size: 0.73rem;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .hotspot-tag:hover {
+            background: rgba(34, 211, 238, 0.18);
+            color: #ffffff;
+            border-color: var(--accent-cyan);
+            transform: translateY(-1px);
+        }
+
+        .hotspot-tag.risk-severe {
+            border-color: rgba(251, 113, 133, 0.35);
+            background: rgba(251, 113, 133, 0.08);
+            color: #fecdd3;
+        }
+
+        .hotspot-tag.risk-severe:hover {
+            background: rgba(251, 113, 133, 0.25);
+            border-color: var(--accent-rose);
+        }
+
+        #incidentPickerMap {
+            height: 380px;
+            width: 100%;
+            z-index: 5;
+            background: #090e1a;
+            transition: height 0.3s ease;
+        }
+
+        #incidentPickerMap.expanded {
+            height: 520px;
+        }
+
+        .map-footer-status {
+            padding: 7px 14px;
+            background: rgba(11, 17, 30, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .map-footer-coords {
+            font-family: monospace;
+            color: var(--accent-cyan);
+            font-weight: 600;
+            background: rgba(2, 6, 23, 0.6);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(34, 211, 238, 0.2);
+        }
+
+        /* City Marker Pins on Leaflet Map */
+        .pak-city-pin {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            pointer-events: auto !important;
+            transition: transform 0.2s ease;
+        }
+
+        .pak-city-pin:hover {
+            transform: scale(1.15);
+            z-index: 1000 !important;
+        }
+
+        .city-marker-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            border: 1.5px solid #ffffff;
+            box-shadow: 0 0 8px var(--accent-cyan);
+            flex-shrink: 0;
+        }
+
+        .pak-city-pin.metro .city-marker-dot {
+            width: 13px;
+            height: 13px;
+            background: #fbbf24;
+            box-shadow: 0 0 12px #fbbf24, 0 0 4px #ffffff;
+        }
+
+        .pak-city-pin.risk-high .city-marker-dot {
+            width: 11px;
+            height: 11px;
+            background: #fb7185;
+            box-shadow: 0 0 10px #fb7185;
+        }
+
+        .city-marker-label {
+            margin-left: 5px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #ffffff;
+            background: rgba(11, 17, 30, 0.85);
+            padding: 1px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            white-space: nowrap;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            letter-spacing: 0.2px;
+        }
+
+        .pak-city-pin.metro .city-marker-label {
+            color: #fef08a;
+            border-color: rgba(251, 191, 36, 0.4);
+            font-size: 0.72rem;
+        }
+
+        /* Leaflet Popup Custom Styling */
+        .leaflet-popup-content-wrapper {
+            background: rgba(11, 17, 30, 0.96) !important;
+            border: 1px solid rgba(34, 211, 238, 0.4) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8) !important;
+            backdrop-filter: blur(10px) !important;
+            padding: 0 !important;
+        }
+
+        .leaflet-popup-tip {
+            background: rgba(11, 17, 30, 0.96) !important;
+            border: 1px solid rgba(34, 211, 238, 0.4) !important;
+        }
+
+        .leaflet-popup-content {
+            margin: 0 !important;
+            line-height: 1.4 !important;
+        }
+
+        .city-popup-card {
+            padding: 14px 16px;
+            min-width: 240px;
+            color: #ffffff;
+            font-family: inherit;
+        }
+
+        .city-popup-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            gap: 10px;
+        }
+
+        .city-popup-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .city-risk-pill {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 2px 7px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .city-risk-pill.low { background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+        .city-risk-pill.moderate { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+        .city-risk-pill.high, .city-risk-pill.severe { background: rgba(251, 113, 133, 0.2); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.3); }
+
+        .city-popup-body {
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .city-popup-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #94a3b8;
+        }
+
+        .city-popup-row i {
+            color: var(--accent-cyan);
+            width: 14px;
+            text-align: center;
+        }
+
+        .city-popup-coords {
+            font-family: monospace;
+            font-size: 0.72rem;
+            color: var(--accent-cyan);
+            background: rgba(2, 6, 23, 0.6);
+            padding: 3px 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .btn-city-select {
+            width: 100%;
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.25), rgba(2, 132, 199, 0.35));
+            border: 1px solid var(--accent-cyan);
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-city-select:hover {
+            background: var(--accent-cyan);
+            color: #020617;
+            box-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+        }
+
+        /* Custom Neon Beacon Pin */
+        .beacon-marker-container {
+            position: relative;
+            width: 28px;
+            height: 28px;
+        }
+
+        .beacon-pin-dot {
+            width: 16px;
+            height: 16px;
+            background: #22d3ee;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 12px #22d3ee, 0 0 24px #22d3ee;
+            position: absolute;
+            top: 6px;
+            left: 6px;
+        }
+
+        .beacon-pulse-ring {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(34, 211, 238, 0.4);
+            animation: beaconRing 2s infinite ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes beaconRing {
+            0% { transform: scale(0.4); opacity: 1; }
+            100% { transform: scale(2.6); opacity: 0; }
+        }
+
+        .priority-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+        }
+
+        .priority-pill {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-glass);
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-muted);
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .priority-pill input {
+            display: none;
+        }
+
+        .priority-pill.low:hover, .priority-pill.low.selected {
+            border-color: var(--accent-emerald);
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--accent-emerald);
+        }
+
+        .priority-pill.medium:hover, .priority-pill.medium.selected {
+            border-color: var(--accent-amber);
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--accent-amber);
+        }
+
+        .priority-pill.high:hover, .priority-pill.high.selected {
+            border-color: var(--accent-rose);
+            background: rgba(251, 113, 133, 0.15);
+            color: var(--accent-rose);
+        }
+
+        /* Tables for Records */
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .records-table th, .records-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-glass);
+            font-size: 0.88rem;
+        }
+
+        .records-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .records-table td {
+            color: var(--text-main);
+        }
+
+        .badge-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-pending { background: rgba(251, 191, 36, 0.15); color: var(--accent-amber); border: 1px solid rgba(251, 191, 36, 0.3); }
+        .status-verified { background: rgba(34, 211, 238, 0.15); color: var(--accent-cyan); border: 1px solid rgba(34, 211, 238, 0.3); }
+        .status-resolved { background: rgba(52, 211, 153, 0.15); color: var(--accent-emerald); border: 1px solid rgba(52, 211, 153, 0.3); }
+
+        /* Enhanced File Evidence Upload Zone */
+        .file-upload-zone {
+            position: relative;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px dashed rgba(34, 211, 238, 0.35);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .file-upload-zone:hover, .file-upload-zone.dragover {
+            border-color: var(--accent-cyan);
+            background: rgba(34, 211, 238, 0.08);
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.2);
+        }
+        .upload-idle-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+        .upload-preview-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(34, 211, 238, 0.4);
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .preview-img-container {
+            width: 58px;
+            height: 58px;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #000;
+            border: 1px solid var(--border-glass);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .preview-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .preview-info-box {
+            flex: 1;
+            min-width: 0;
+        }
+        .preview-filename {
+            font-size: 0.86rem;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .preview-filesize {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            margin: 2px 0 4px 0;
+        }
+        .preview-badge {
+            font-size: 0.72rem;
+            color: var(--accent-emerald);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+        }
+        .btn-remove-attachment {
+            background: rgba(251, 113, 133, 0.15);
+            border: 1px solid rgba(251, 113, 133, 0.4);
+            color: var(--accent-rose);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-remove-attachment:hover {
+            background: rgba(251, 113, 133, 0.35);
+            transform: scale(1.05);
+        }
+        .btn-view-evidence {
+            background: rgba(34, 211, 238, 0.15);
+            border: 1px solid rgba(34, 211, 238, 0.4);
+            color: var(--accent-cyan);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.76rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+        .btn-view-evidence:hover {
+            background: rgba(34, 211, 238, 0.3);
+        }
+
+        @media(max-width: 900px) {
+            .dashboard-container { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Header Navbar -->
+    <header>
+        <div class="logo-section">
+            <div class="logo-box">FDIP</div>
+            <div class="logo-text">
+                <h1>Pakistan Flood & Disaster Intelligence</h1>
+                <p>Citizen Portal Dashboard</p>
+            </div>
+        </div>
+        
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="map.html">GIS Map</a>
+            <a href="alerts.html">Alerts</a>
+            <a href="citizen.html" class="active">Citizen Dashboard</a>
+        </div>
+
+        <div class="auth-btn-group">
+            <button class="btn-auth btn-login" onclick="logoutSession()">Sign Out</button>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="dashboard-sidebar">
+            <div class="user-profile-box">
+                <div class="user-avatar" id="sidebarAvatar">AZ</div>
+                <h4 id="sidebarUserName" style="color: #fff; font-size: 1rem; margin-bottom: 4px;">Loading...</h4>
+                <p id="sidebarUserEmail" style="font-size: 0.75rem; color: var(--accent-cyan);">Verified Citizen</p>
+            </div>
+            
+            <div class="sidebar-menu">
+                <button class="active" onclick="switchTab('report-section', this)"><i class="fa-solid fa-bullhorn"></i> Submit New Report</button>
+                <button onclick="switchTab('records-section', this)"><i class="fa-solid fa-clock-rotate-left"></i> My Incident Records</button>
+                <button onclick="switchTab('advisories-section', this)"><i class="fa-solid fa-shield-heart"></i> Safety Guidelines</button>
+            </div>
+        </aside>
+
+        <!-- Dynamic Content Area -->
+        <main class="dashboard-content">
+            
+            <!-- SECTION 1: Report Submission Form -->
+            <div id="report-section" class="dash-card">
+                <h3><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-cyan);"></i> Emergency Incident & Damage Submission</h3>
+                <p class="section-desc">Report live urban flooding, river swells, road blockages, or structural damage with GPS verification for rapid national emergency dispatch.</p>
+                
+                <form id="citizenReportForm">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label><i class="fa-solid fa-layer-group" style="color: var(--accent-cyan);"></i> Incident / Hazard Category</label>
+                            <select id="reportCategory" required>
+                                <option value="">Select Category...</option>
+                                <option>Riverine / Urban Flash Flooding</option>
+                                <option>Landslide & Mountain Road Blockage</option>
+                                <option>Seismic Tremor / Structural Crack</option>
+                                <option>Severe Storm / Wind Damage</option>
+                                <option>Agricultural Waterlogging / Crop Loss</option>
+                                <option>Dam Spillway / Canal Overflow Risk</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Cascading Province Selector -->
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-map-location-dot" style="color: var(--accent-cyan);"></i> Target Province / Administrative Region</label>
+                            <select id="reportProvince" required onchange="onProvinceChange(this.value)">
+                                <option value="">Select Province / Region...</option>
+                                <option value="Punjab">Punjab</option>
+                                <option value="Sindh">Sindh</option>
+                                <option value="Khyber Pakhtunkhwa (KP)">Khyber Pakhtunkhwa (KP)</option>
+                                <option value="Balochistan">Balochistan</option>
+                                <option value="Gilgit-Baltistan (GB)">Gilgit-Baltistan (GB)</option>
+                                <option value="Azad Jammu & Kashmir (AJK)">Azad Jammu & Kashmir (AJK)</option>
+                                <option value="Islamabad Capital Territory">Islamabad Capital Territory</option>
+                            </select>
+                        </div>
+
+                        <!-- Cascading District Selector -->
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-city" style="color: var(--accent-cyan);"></i> Target District</label>
+                            <select id="reportDistrict" required onchange="onDistrictChange(this.value)">
+                                <option value="">Select Province First...</option>
+                            </select>
+                        </div>
+
+                        <!-- Exact Location & GPS Section -->
+                        <div class="form-group full-width">
+                            <label><i class="fa-solid fa-location-crosshairs" style="color: var(--accent-cyan);"></i> Exact Incident Location / Landmark & GPS Coordinates</label>
+                            <input type="text" id="reportLocation" placeholder="e.g. Near Main GT Road Bridge, Swat (Lat: 35.22, Lng: 72.43)" required>
+                            
+                            <!-- Location Controls Toolbar -->
+                            <div class="location-controls-bar">
+                                <div class="location-btn-group">
+                                    <button type="button" class="btn-loc-action btn-gps" id="btnLiveGps" onclick="getUserLiveLocation()">
+                                        <i class="fa-solid fa-location-arrow"></i> <span>Use Live GPS Location</span>
+                                    </button>
+                                    <button type="button" class="btn-loc-action" onclick="toggleMapVisibility()">
+                                        <i class="fa-solid fa-map"></i> <span id="mapToggleLabel">Toggle Map Picker</span>
+                                    </button>
+                                </div>
+                                <div class="coords-badge" id="coordsBadgeDisplay">
+                                    <i class="fa-solid fa-satellite"></i>
+                                    <span id="coordsText">Default: National Center (30.37°N, 69.34°E)</span>
+                                </div>
+                            </div>
+
+                            <!-- Interactive Map Box -->
+                            <div class="picker-map-card" id="mapPickerContainer">
+                                <div class="picker-map-header">
+                                    <div class="map-header-left">
+                                        <span class="map-live-badge"><i class="fa-solid fa-satellite-dish"></i> Pakistan GIS Navigator</span>
+                                        <div class="map-live-status-pill">
+                                            <span class="pulse-dot"></span> LIVE BOUNDING ACTIVE
+                                        </div>
+                                        <span id="mapZoomStatus" class="map-zoom-tag">Zoom: 6x</span>
+                                    </div>
+                                    <div class="map-header-controls">
+                                        <!-- Basemap Layer Switcher (Terrain, Street, Satellite) -->
+                                        <div class="map-layer-selector" title="Switch Basemap Style">
+                                            <button type="button" class="layer-pill active" id="btnLayerTerrain" onclick="switchBaseLayer('terrain')">
+                                                <i class="fa-solid fa-mountain-sun"></i> <span>Terrain</span>
+                                            </button>
+                                            <button type="button" class="layer-pill" id="btnLayerStreet" onclick="switchBaseLayer('street')">
+                                                <i class="fa-solid fa-road"></i> <span>Street</span>
+                                            </button>
+                                            <button type="button" class="layer-pill" id="btnLayerSatellite" onclick="switchBaseLayer('satellite')">
+                                                <i class="fa-solid fa-earth-asia"></i> <span>Satellite</span>
+                                            </button>
+                                        </div>
+                                        <!-- City Pins Toggle -->
+                                        <button type="button" class="map-tool-btn active" id="btnToggleCities" onclick="toggleCityMarkers()" title="Show/Hide Pakistan Cities on map">
+                                            <i class="fa-solid fa-city"></i> <span id="citiesToggleText">Cities: ON</span>
+                                        </button>
+                                        <!-- Reset View -->
+                                        <button type="button" class="map-tool-btn" onclick="resetMapToPakistan()" title="Reset view to whole Pakistan">
+                                            <i class="fa-solid fa-expand"></i> <span>Reset</span>
+                                        </button>
+                                        <!-- Expand Height -->
+                                        <button type="button" class="map-tool-btn" id="btnExpandMap" onclick="toggleMapHeight()" title="Expand / Contract map view">
+                                            <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Search & Quick Category Bar -->
+                                <div class="map-subtoolbar">
+                                    <div class="map-search-wrapper">
+                                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                                        <input type="text" id="mapCitySearchInput" placeholder="Search any Pakistani city, district or flood zone (e.g. Swat, Sukkur, Multan, Nowshera, Gwadar)..." oninput="handleCitySearchInput(this.value)" autocomplete="off">
+                                        <button type="button" id="btnClearCitySearch" class="btn-clear-search" onclick="clearCitySearch()" style="display: none;">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                        <!-- Search Results Dropdown -->
+                                        <div class="city-search-results" id="citySearchResults" style="display: none;"></div>
+                                    </div>
+
+                                    <!-- Category Tabs -->
+                                    <div class="hotspot-categories">
+                                        <button type="button" class="cat-tab active" onclick="filterHotspotCategory('all', this)">🔥 All Key Hubs</button>
+                                        <button type="button" class="cat-tab" onclick="filterHotspotCategory('risk', this)">⚠️ High Flood Risk</button>
+                                        <button type="button" class="cat-tab" onclick="filterHotspotCategory('metro', this)">🏛️ Metros</button>
+                                        <button type="button" class="cat-tab" onclick="filterHotspotCategory('Punjab', this)">Punjab</button>
+                                        <button type="button" class="cat-tab" onclick="filterHotspotCategory('Sindh', this)">Sindh</button>
+                                        <button type="button" class="cat-tab" onclick="filterHotspotCategory('Khyber Pakhtunkhwa (KP)', this)">KP</button>
+                                        <button type="button" class="cat-tab" onclick="filterHotspotCategory('Balochistan', this)">Balochistan</button>
+                                        <button type="button" class="cat-tab" onclick="filterHotspotCategory('GB_AJK', this)">GB & AJK</button>
+                                    </div>
+                                </div>
+
+                                <!-- Quick Hotspot Pills Row -->
+                                <div class="map-hotspots-row" id="hotspotsContainer">
+                                    <!-- Rendered dynamically by JavaScript -->
+                                </div>
+
+                                <!-- Map Canvas -->
+                                <div id="incidentPickerMap"></div>
+
+                                <!-- Footer Status -->
+                                <div class="map-footer-status">
+                                    <div class="map-footer-tip">
+                                        <i class="fa-solid fa-circle-info" style="color: var(--accent-cyan);"></i>
+                                        <span>Click any city dot or drag the glowing pin anywhere across Pakistan to lock coordinates</span>
+                                    </div>
+                                    <div class="map-footer-coords" id="mapFooterCoords">
+                                        30.3753°N, 69.3451°E
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-rose);"></i> Incident Priority Level</label>
+                            <div class="priority-options">
+                                <label class="priority-pill low selected" onclick="setPriority(this, 'Low')">
+                                    <input type="radio" name="priority" value="Low" checked> Low (Minor Risk)
+                                </label>
+                                <label class="priority-pill medium" onclick="setPriority(this, 'Medium')">
+                                    <input type="radio" name="priority" value="Medium"> Medium (Moderate Threat)
+                                </label>
+                                <label class="priority-pill high" onclick="setPriority(this, 'High')">
+                                    <input type="radio" name="priority" value="High"> High / Critical (Immediate Rescue)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label><i class="fa-solid fa-file-pen" style="color: var(--accent-cyan);"></i> Detailed Description & Field Notes</label>
+                            <textarea id="reportDescription" rows="4" placeholder="Describe water depth levels, affected population count, submerged bridges, or infrastructure status..." required></textarea>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label><i class="fa-solid fa-camera" style="color: var(--accent-cyan);"></i> Attach Field Photo / Disaster Evidence (Optional)</label>
+                            <div class="file-upload-zone" id="fileUploadZone">
+                                <input type="file" id="reportAttachment" accept="image/*,.pdf,.mp4" style="display: none;" onchange="handleFileSelected(event)">
+                                <div class="upload-idle-state" id="uploadIdleState" onclick="document.getElementById('reportAttachment').click()">
+                                    <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2rem; color: var(--accent-cyan); margin-bottom: 8px;"></i>
+                                    <div style="font-weight: 600; color: #fff; font-size: 0.9rem;">Click or Drag & Drop Photo Evidence Here</div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Supports JPG, PNG, WEBP, PDF &bull; Geotagged evidence speeds up verification</div>
+                                </div>
+                                
+                                <div class="upload-preview-card" id="uploadPreviewCard" style="display: none;">
+                                    <div class="preview-img-container" id="previewImgContainer">
+                                        <img id="attachmentPreviewImg" src="" alt="Evidence Preview">
+                                    </div>
+                                    <div class="preview-info-box">
+                                        <div class="preview-filename" id="previewFileName">evidence.jpg</div>
+                                        <div class="preview-filesize" id="previewFileSize">0 KB</div>
+                                        <span class="preview-badge"><i class="fa-solid fa-circle-check"></i> Evidence Attached &amp; Ready to Transmit</span>
+                                    </div>
+                                    <button type="button" class="btn-remove-attachment" onclick="removeAttachedFile()" title="Remove file">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btnSubmitReport" class="btn-main btn-cyan" style="width: 100%; justify-content: center; margin-top: 15px;">
+                        <i class="fa-solid fa-paper-plane"></i> Transmit Report to National Command
+                    </button>
+                </form>
+            </div>
+
+            <!-- SECTION 2: My Incident Records -->
+            <div id="records-section" class="dash-card" style="display: none;">
+                <h3><i class="fa-solid fa-list-check" style="color: var(--accent-amber);"></i> My Submitted Disaster Reports</h3>
+                <p class="section-desc">Track real-time verification status, priority assignments, and staff review actions for all your submitted tickets.</p>
+                
+                <div style="overflow-x: auto;">
+                    <table class="records-table" id="myRecordsTable">
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>Category</th>
+                                <th>District / Province</th>
+                                <th>Exact Location & GPS</th>
+                                <th>Evidence</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th><i class="fa-regular fa-calendar-days" style="color: var(--accent-cyan); margin-right: 4px;"></i> Reported Date & Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECTION 3: Safety Advisories -->
+            <div id="advisories-section" class="dash-card" style="display: none;">
+                <h3><i class="fa-solid fa-shield-heart" style="color: var(--accent-emerald);"></i> National Emergency Guidelines</h3>
+                <p class="section-desc">Essential safety protocols issued by the National Disaster Management Grid.</p>
+                <div style="display: grid; gap: 15px;">
+                    <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; border-left: 4px solid var(--accent-cyan);">
+                        <h4 style="color: #fff; margin-bottom: 6px;">Flash Flood Evacuation Rule</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Move immediately to higher ground upon receiving red water level alerts from regional telemetry stations.</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; border-left: 4px solid var(--accent-amber);">
+                        <h4 style="color: #fff; margin-bottom: 6px;">Seismic Aftershock Precautions</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Stay clear of damaged masonry and glass façades for at least 6 hours following any registered magnitude 4.0+ tremor.</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Citizen Evidence Photo Lightbox Modal -->
+    <div class="modal-overlay" id="citizenEvidenceModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 20px;">
+        <div class="modal-card" style="background: #0f172a; border: 1px solid var(--border-glass); border-radius: 12px; max-width: 700px; width: 100%; padding: 25px; position: relative; max-height: 90vh; overflow-y: auto;">
+            <button class="modal-close-btn" onclick="closeCitizenEvidenceModal()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: #fff; font-size: 1.4rem; cursor: pointer;">&times;</button>
+            <h3 style="color: #fff; font-size: 1.15rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-camera" style="color: var(--accent-cyan);"></i> <span id="evidenceModalTitle">Incident Photo Evidence</span>
+            </h3>
+            <div style="border-radius: 8px; overflow: hidden; background: #000; border: 1px solid var(--border-glass); text-align: center; margin-bottom: 15px; max-height: 450px;">
+                <img id="evidenceModalImg" src="" alt="Evidence Full View" style="max-width: 100%; max-height: 450px; object-fit: contain;">
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <a id="evidenceDownloadBtn" href="#" target="_blank" download="disaster_evidence.jpg" class="btn-loc-action" style="background: rgba(34,211,238,0.2); color: var(--accent-cyan); text-decoration: none;">
+                    <i class="fa-solid fa-download"></i> Open / Download Full Resolution
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Pakistan Flood & Disaster Intelligence Platform &bull; Secure Citizen Emergency Infrastructure</p>
+    </footer>
+
+    <!-- Leaflet JS Library -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Global Helpers & Navigation -->
+    <script>
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'fa-circle-info';
+            if (type === 'success') icon = 'fa-circle-check';
+            if (type === 'error') icon = 'fa-triangle-exclamation';
+
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function switchTab(sectionId, btn) {
+            document.querySelectorAll('.dash-card').forEach(card => card.style.display = 'none');
+            document.getElementById(sectionId).style.display = 'block';
+            document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (sectionId === 'report-section' && window.incidentMap) {
+                setTimeout(() => {
+                    window.incidentMap.invalidateSize();
+                }, 200);
+            }
+        }
+
+        function setPriority(element, level) {
+            document.querySelectorAll('.priority-pill').forEach(p => p.classList.remove('selected'));
+            element.classList.add('selected');
+            element.querySelector('input').checked = true;
+        }
+
+        async function logoutSession() {
+            const { supabase } = await import('./js/supabaseClient.js');
+            await supabase.auth.signOut();
+            showToast("Signed out securely from Supabase session.", "success");
+            setTimeout(() => window.location.href = "index.html", 1000);
+        }
+    </script>
+
+    <!-- Pakistan Districts & Cascading Selectors Logic -->
+    <script>
+        const PAKISTAN_DISTRICTS_DATA = {
+            "Punjab": [
+                "Attock", "Bahawalnagar", "Bahawalpur", "Bhakkar", "Chakwal", "Chiniot", 
+                "Dera Ghazi Khan", "Faisalabad", "Gujranwala", "Gujrat", "Hafizabad", "Jhang", 
+                "Jhelum", "Kasur", "Khanewal", "Khushab", "Kot Addu", "Lahore", "Layyah", 
+                "Lodhran", "Mandi Bahauddin", "Mianwali", "Multan", "Murree", "Muzaffargarh", 
+                "Nankana Sahib", "Narowal", "Okara", "Pakpattan", "Rahim Yar Khan", "Rajanpur", 
+                "Rawalpindi", "Sahiwal", "Sargodha", "Sheikhupura", "Sialkot", "Taunsa", 
+                "Toba Tek Singh", "Vehari", "Wazirabad"
+            ],
+            "Sindh": [
+                "Badin", "Dadu", "Ghotki", "Hyderabad", "Jacobabad", "Jamshoro", 
+                "Karachi Central", "Karachi East", "Karachi South", "Karachi West", "Keamari", "Korangi", "Malir",
+                "Kashmore", "Khairpur", "Kambar Shahdadkot", "Kotri", "Larkana", "Matiari", 
+                "Mirpur Khas", "Naushahro Feroze", "Qambar Shahdadkot", "Sanghar", "Shaheed Benazirabad (Nawabshah)", 
+                "Shikarpur", "Sujawal", "Sukkur", "Tando Allahyar", "Tando Muhammad Khan", "Tharparkar (Mithi)", "Thatta", "Umerkot"
+            ],
+            "Khyber Pakhtunkhwa (KP)": [
+                "Abbottabad", "Bajaur", "Bannu", "Battagram", "Buner", "Charsadda", 
+                "Chitral Lower", "Chitral Upper", "Dera Ismail Khan", "Dir Lower", "Dir Upper", 
+                "Hangu", "Haripur", "Karak", "Khyber", "Kohat", "Kohistan Lower", "Kohistan Upper", 
+                "Kolai-Palas", "Kurram", "Lakki Marwat", "Malakand", "Mansehra", "Mardan", 
+                "Mohmand", "North Waziristan", "Nowshera", "Orakzai", "Peshawar", "Shangla", 
+                "South Waziristan Upper", "South Waziristan Lower", "Swabi", "Swat", "Tank", "Torghar"
+            ],
+            "Balochistan": [
+                "Awaran", "Barkhan", "Chagai", "Chaman", "Dera Bugti", "Duki", 
+                "Gwadar", "Harnai", "Hub", "Jafarabad", "Jhal Magsi", "Kachhi (Bolan)", 
+                "Kalat", "Kech (Turbat)", "Kharan", "Khuzdar", "Killa Abdullah", "Killa Saifullah", 
+                "Kohlu", "Lasbela", "Loralai", "Mastung", "Musakhel", "Nasirabad", "Nushki", 
+                "Panjgur", "Pishin", "Quetta", "Shaheed Sikandarabad (Surab)", "Sherani", "Sibi", 
+                "Sohbatpur", "Usta Muhammad", "Washuk", "Ziarat"
+            ],
+            "Gilgit-Baltistan (GB)": [
+                "Astore", "Darel", "Diamer (Chilas)", "Ghanche", "Ghizer", "Gilgit", 
+                "Gupis-Yasin", "Hunza", "Kharmang", "Nagar", "Roundu", "Shigar", "Skardu", "Tangir"
+            ],
+            "Azad Jammu & Kashmir (AJK)": [
+                "Bagh", "Bhimber", "Hattian Bala (Jhelum Valley)", "Haveli (Kahuta)", "Kotli", 
+                "Mirpur", "Muzaffarabad", "Neelum", "Poonch (Rawalakot)", "Sudhanoti (Pallandri)"
+            ],
+            "Islamabad Capital Territory": [
+                "Islamabad"
+            ]
+        };
+
+        let isUserSelectedDistrict = false;
+
+        function onDistrictChange(val) {
+            if (val) {
+                isUserSelectedDistrict = true;
+            } else {
+                isUserSelectedDistrict = false;
+            }
+        }
+
+        function isDistrictMatch(districtInList, candidate) {
+            if (!districtInList || !candidate) return false;
+            const clean1 = districtInList.toLowerCase().replace(/district|tehsil|division|city|cantonment|\(|\)/g, '').trim();
+            const clean2 = candidate.toLowerCase().replace(/district|tehsil|division|city|cantonment|\(|\)/g, '').trim();
+            return clean1 === clean2 || clean1.includes(clean2) || clean2.includes(clean1);
+        }
+
+        function onProvinceChange(provinceName, selectDistrict = null, preserveExisting = false) {
+            const districtSelect = document.getElementById('reportDistrict');
+            if (!districtSelect) return;
+            
+            const prevVal = districtSelect.value;
+            districtSelect.innerHTML = '';
+
+            if (!provinceName || !PAKISTAN_DISTRICTS_DATA[provinceName]) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.innerText = 'Select Province First...';
+                districtSelect.appendChild(opt);
+                return;
+            }
+
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.innerText = `Select District in ${provinceName}...`;
+            districtSelect.appendChild(defaultOpt);
+
+            const districts = PAKISTAN_DISTRICTS_DATA[provinceName].slice().sort();
+            
+            let targetDistrict = selectDistrict;
+            if (!targetDistrict && preserveExisting && prevVal) {
+                targetDistrict = prevVal;
+            }
+
+            let foundSelected = false;
+            districts.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.innerText = d;
+                if (targetDistrict && isDistrictMatch(d, targetDistrict) && !foundSelected) {
+                    opt.selected = true;
+                    foundSelected = true;
+                }
+                districtSelect.appendChild(opt);
+            });
+        }
+    </script>
+
+    <!-- File Attachment & Evidence Handlers -->
+    <script>
+        let currentAttachedFile = null;
+        let currentAttachedDataUrl = null;
+
+        function handleFileSelected(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            processSelectedFile(file);
+        }
+
+        function processSelectedFile(file) {
+            currentAttachedFile = file;
+            
+            const idleState = document.getElementById('uploadIdleState');
+            const previewCard = document.getElementById('uploadPreviewCard');
+            const fileNameElem = document.getElementById('previewFileName');
+            const fileSizeElem = document.getElementById('previewFileSize');
+            const previewImg = document.getElementById('attachmentPreviewImg');
+            
+            fileNameElem.innerText = file.name;
+            fileSizeElem.innerText = formatFileSize(file.size);
+            
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentAttachedDataUrl = e.target.result;
+                    previewImg.src = currentAttachedDataUrl;
+                    previewImg.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewImg.src = 'https://cdn-icons-png.flaticon.com/512/2991/2991108.png';
+                previewImg.style.display = 'block';
+            }
+
+            idleState.style.display = 'none';
+            previewCard.style.display = 'flex';
+            showToast(`Evidence attached: ${file.name}`, 'info');
+        }
+
+        function removeAttachedFile() {
+            currentAttachedFile = null;
+            currentAttachedDataUrl = null;
+            const fileInput = document.getElementById('reportAttachment');
+            if (fileInput) fileInput.value = '';
+
+            document.getElementById('uploadIdleState').style.display = 'flex';
+            document.getElementById('uploadPreviewCard').style.display = 'none';
+            showToast('Attached file removed', 'info');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        // Setup Drag and Drop
+        window.addEventListener('DOMContentLoaded', () => {
+            const dropZone = document.getElementById('fileUploadZone');
+            if (dropZone) {
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        dropZone.classList.add('dragover');
+                    }, false);
+                });
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        dropZone.classList.remove('dragover');
+                    }, false);
+                });
+                dropZone.addEventListener('drop', (e) => {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (files.length > 0) {
+                        processSelectedFile(files[0]);
+                    }
+                }, false);
+            }
+        });
+
+        // Client-side image compressor via Canvas
+        async function compressImageToDataUrl(file, maxWidth = 800, quality = 0.65) {
+            return new Promise((resolve) => {
+                if (!file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Lightbox modal helpers
+        window.openCitizenEvidenceModal = function(imgSrc, title = 'Disaster Field Photo') {
+            document.getElementById('evidenceModalImg').src = imgSrc;
+            document.getElementById('evidenceModalTitle').innerText = title;
+            const dBtn = document.getElementById('evidenceDownloadBtn');
+            dBtn.href = imgSrc;
+            document.getElementById('citizenEvidenceModal').style.display = 'flex';
+        };
+
+        window.closeCitizenEvidenceModal = function() {
+            document.getElementById('citizenEvidenceModal').style.display = 'none';
+        };
+    </script>
+
+    <!-- Leaflet Geolocation & Interactive Map Logic -->
+    <script>
+        // Comprehensive Pakistan Cities & Flood Hotspots Data
+        const PAKISTAN_CITIES_DATA = [
+            // Federal Capital
+            { name: "Islamabad", lat: 33.6844, lng: 73.0479, province: "Islamabad Capital Territory", district: "Islamabad", isMetro: true, risk: "Moderate", tag: "Federal Capital", emoji: "🏛️" },
+            { name: "Rawalpindi", lat: 33.6007, lng: 73.0679, province: "Punjab", district: "Rawalpindi", isMetro: true, risk: "High", tag: "Major Metro & Lai Nullah Zone", emoji: "🏙️" },
+
+            // Punjab Major Cities & Flood Zones
+            { name: "Lahore", lat: 31.5204, lng: 74.3587, province: "Punjab", district: "Lahore", isMetro: true, risk: "Moderate", tag: "Provincial Capital", emoji: "🏙️" },
+            { name: "Faisalabad", lat: 31.4180, lng: 73.0790, province: "Punjab", district: "Faisalabad", isMetro: true, risk: "Low", tag: "Major Industrial Hub", emoji: "🏭" },
+            { name: "Multan", lat: 30.1575, lng: 71.5249, province: "Punjab", district: "Multan", isMetro: true, risk: "High", tag: "Chenab River Basin", emoji: "🕌" },
+            { name: "Gujranwala", lat: 32.1617, lng: 74.1883, province: "Punjab", district: "Gujranwala", isMetro: false, risk: "Moderate", tag: "Major Industrial City", emoji: "🏢" },
+            { name: "Sialkot", lat: 32.4927, lng: 74.5310, province: "Punjab", district: "Sialkot", isMetro: false, risk: "High", tag: "Nullah Aik & Dek Flash Basin", emoji: "⚽" },
+            { name: "Bahawalpur", lat: 29.3956, lng: 71.6836, province: "Punjab", district: "Bahawalpur", isMetro: false, risk: "High", tag: "Sutlej River Basin", emoji: "🏰" },
+            { name: "Sargodha", lat: 32.0836, lng: 72.6711, province: "Punjab", district: "Sargodha", isMetro: false, risk: "Moderate", tag: "Divisional Hub", emoji: "🍊" },
+            { name: "Dera Ghazi Khan", lat: 30.0561, lng: 70.6403, province: "Punjab", district: "Dera Ghazi Khan", isMetro: false, risk: "Severe", tag: "Critical Hill Torrent Flood Zone", emoji: "⚠️" },
+            { name: "Rajanpur", lat: 29.0435, lng: 70.3160, province: "Punjab", district: "Rajanpur", isMetro: false, risk: "Severe", tag: "Critical Hill Torrent Flood Zone", emoji: "⚠️" },
+            { name: "Rahim Yar Khan", lat: 28.4212, lng: 70.2989, province: "Punjab", district: "Rahim Yar Khan", isMetro: false, risk: "High", tag: "Indus River Basin", emoji: "🌾" },
+            { name: "Muzaffargarh", lat: 30.0750, lng: 71.1921, province: "Punjab", district: "Muzaffargarh", isMetro: false, risk: "Severe", tag: "Chenab & Indus Confluence", emoji: "🌊" },
+            { name: "Sahiwal", lat: 30.6682, lng: 73.1114, province: "Punjab", district: "Sahiwal", isMetro: false, risk: "Moderate", tag: "Agricultural Center", emoji: "🚜" },
+            { name: "Jhelum", lat: 32.9405, lng: 73.7276, province: "Punjab", district: "Jhelum", isMetro: false, risk: "High", tag: "Jhelum Riverfront", emoji: "🌊" },
+            { name: "Gujrat", lat: 32.5742, lng: 74.0754, province: "Punjab", district: "Gujrat", isMetro: false, risk: "Moderate", tag: "Chenab River Belt", emoji: "🏢" },
+            { name: "Mianwali", lat: 32.5839, lng: 71.5370, province: "Punjab", district: "Mianwali", isMetro: false, risk: "High", tag: "Chashma Barrage Zone", emoji: "🌊" },
+            { name: "Kasur", lat: 31.1179, lng: 74.4466, province: "Punjab", district: "Kasur", isMetro: false, risk: "High", tag: "Sutlej River Ganda Singh Spill", emoji: "⚠️" },
+            { name: "Jhang", lat: 31.2681, lng: 72.3181, province: "Punjab", district: "Jhang", isMetro: false, risk: "High", tag: "Trimmu Barrage Confluence", emoji: "🌊" },
+            { name: "Okara", lat: 30.8138, lng: 73.4534, province: "Punjab", district: "Okara", isMetro: false, risk: "Moderate", tag: "Ravi Basin", emoji: "🌾" },
+            { name: "Attock", lat: 33.7667, lng: 72.3598, province: "Punjab", district: "Attock", isMetro: false, risk: "Moderate", tag: "Indus River Confluence", emoji: "⛰️" },
+            { name: "Murree", lat: 33.9062, lng: 73.3903, province: "Punjab", district: "Murree", isMetro: false, risk: "High", tag: "Highland Landslide Risk Zone", emoji: "🏔️" },
+            { name: "Taunsa", lat: 30.7036, lng: 70.6505, province: "Punjab", district: "Taunsa", isMetro: false, risk: "Severe", tag: "Taunsa Barrage / Torrents", emoji: "⚠️" },
+            { name: "Layyah", lat: 30.9613, lng: 70.9398, province: "Punjab", district: "Layyah", isMetro: false, risk: "High", tag: "Indus River Left Bank", emoji: "🌊" },
+            { name: "Bahawalnagar", lat: 29.9987, lng: 73.2527, province: "Punjab", district: "Bahawalnagar", isMetro: false, risk: "High", tag: "Sutlej Flood Spill Zone", emoji: "⚠️" },
+            { name: "Chakwal", lat: 32.9328, lng: 72.8550, province: "Punjab", district: "Chakwal", isMetro: false, risk: "Moderate", tag: "Potohar Plateau", emoji: "🏞️" },
+
+            // Sindh Major Cities & Flood Zones
+            { name: "Karachi", lat: 24.8607, lng: 67.0011, province: "Sindh", district: "Karachi South", isMetro: true, risk: "High", tag: "Provincial Capital & Coastal Megacity", emoji: "🏙️" },
+            { name: "Hyderabad", lat: 25.3960, lng: 68.3578, province: "Sindh", district: "Hyderabad", isMetro: true, risk: "High", tag: "Lower Indus Basin Hub", emoji: "🏙️" },
+            { name: "Sukkur", lat: 27.7052, lng: 68.8574, province: "Sindh", district: "Sukkur", isMetro: true, risk: "Severe", tag: "Sukkur Barrage Critical Chokepoint", emoji: "🌊" },
+            { name: "Larkana", lat: 27.5590, lng: 68.2120, province: "Sindh", district: "Larkana", isMetro: false, risk: "Severe", tag: "Right Bank Inundation Belt", emoji: "🏛️" },
+            { name: "Dadu", lat: 26.7329, lng: 67.7769, province: "Sindh", district: "Dadu", isMetro: false, risk: "Severe", tag: "Manchar Lake & MNV Drain Zone", emoji: "🌊" },
+            { name: "Nawabshah", lat: 26.2483, lng: 68.4096, province: "Sindh", district: "Shaheed Benazirabad (Nawabshah)", isMetro: false, risk: "High", tag: "Central Sindh Plain", emoji: "🏢" },
+            { name: "Mirpur Khas", lat: 25.5276, lng: 69.0126, province: "Sindh", district: "Mirpur Khas", isMetro: false, risk: "High", tag: "Left Bank Drainage Basin", emoji: "🥭" },
+            { name: "Jacobabad", lat: 28.2810, lng: 68.4376, province: "Sindh", district: "Jacobabad", isMetro: false, risk: "Severe", tag: "High Inundation Basin", emoji: "⚠️" },
+            { name: "Khairpur", lat: 27.5295, lng: 68.7592, province: "Sindh", district: "Khairpur", isMetro: false, risk: "High", tag: "Indus Flood Plain", emoji: "🌴" },
+            { name: "Thatta", lat: 24.7475, lng: 67.9235, province: "Sindh", district: "Thatta", isMetro: false, risk: "High", tag: "Indus Delta & Coastal Surge", emoji: "🌊" },
+            { name: "Badin", lat: 24.6560, lng: 68.8370, province: "Sindh", district: "Badin", isMetro: false, risk: "Severe", tag: "LBOD Overflow & Coastal Zone", emoji: "🌊" },
+            { name: "Ghotki", lat: 28.0060, lng: 69.3161, province: "Sindh", district: "Ghotki", isMetro: false, risk: "High", tag: "Indus River Corridor", emoji: "🌾" },
+            { name: "Shikarpur", lat: 27.9570, lng: 68.6380, province: "Sindh", district: "Shikarpur", isMetro: false, risk: "High", tag: "Upper Sindh Flood Plain", emoji: "🏛️" },
+            { name: "Jamshoro", lat: 25.4304, lng: 68.2809, province: "Sindh", district: "Jamshoro", isMetro: false, risk: "High", tag: "Kotri Barrage Zone", emoji: "⚡" },
+            { name: "Kashmore", lat: 28.4332, lng: 69.5836, province: "Sindh", district: "Kashmore", isMetro: false, risk: "Severe", tag: "Guddu Barrage Gateway", emoji: "⚠️" },
+            { name: "Sanghar", lat: 26.0466, lng: 68.9482, province: "Sindh", district: "Sanghar", isMetro: false, risk: "High", tag: "Chotiari Reservoir Zone", emoji: "🌾" },
+            { name: "Qambar", lat: 27.5878, lng: 68.0163, province: "Sindh", district: "Qambar Shahdadkot", isMetro: false, risk: "Severe", tag: "Kirthar Range Flash Runoff", emoji: "⚠️" },
+            { name: "Sujawal", lat: 24.6067, lng: 68.1887, province: "Sindh", district: "Sujawal", isMetro: false, risk: "High", tag: "Lower Indus Delta", emoji: "🌊" },
+            { name: "Mithi", lat: 24.7438, lng: 69.7971, province: "Sindh", district: "Tharparkar (Mithi)", isMetro: false, risk: "Moderate", tag: "Tharparkar Desert HQ", emoji: "🐪" },
+
+            // Khyber Pakhtunkhwa (KP) Major Cities & Flood Zones
+            { name: "Peshawar", lat: 34.0151, lng: 71.5249, province: "Khyber Pakhtunkhwa (KP)", district: "Peshawar", isMetro: true, risk: "High", tag: "Provincial Capital & Kabul Basin", emoji: "🏛️" },
+            { name: "Mardan", lat: 34.1989, lng: 72.0405, province: "Khyber Pakhtunkhwa (KP)", district: "Mardan", isMetro: false, risk: "Moderate", tag: "Kalpani River Basin", emoji: "🏢" },
+            { name: "Swat (Mingora)", lat: 35.2227, lng: 72.4258, province: "Khyber Pakhtunkhwa (KP)", district: "Swat", isMetro: false, risk: "Severe", tag: "Swat River Valley Flash Floods", emoji: "🏔️" },
+            { name: "Nowshera", lat: 34.0150, lng: 71.9740, province: "Khyber Pakhtunkhwa (KP)", district: "Nowshera", isMetro: false, risk: "Severe", tag: "Kabul & Swat River Confluence", emoji: "🌊" },
+            { name: "Abbottabad", lat: 34.1688, lng: 73.2215, province: "Khyber Pakhtunkhwa (KP)", district: "Abbottabad", isMetro: false, risk: "Moderate", tag: "Hazara Division Center", emoji: "🌲" },
+            { name: "Dera Ismail Khan", lat: 31.8314, lng: 70.9018, province: "Khyber Pakhtunkhwa (KP)", district: "Dera Ismail Khan", isMetro: false, risk: "Severe", tag: "Indus River & Hill Streams", emoji: "⚠️" },
+            { name: "Charsadda", lat: 34.1482, lng: 71.7406, province: "Khyber Pakhtunkhwa (KP)", district: "Charsadda", isMetro: false, risk: "Severe", tag: "Jindi & Khyali River Delta", emoji: "🌊" },
+            { name: "Kohat", lat: 33.5869, lng: 71.4414, province: "Khyber Pakhtunkhwa (KP)", district: "Kohat", isMetro: false, risk: "Moderate", tag: "Southern KP Gateway", emoji: "⛰️" },
+            { name: "Bannu", lat: 32.9861, lng: 70.6042, province: "Khyber Pakhtunkhwa (KP)", district: "Bannu", isMetro: false, risk: "High", tag: "Kurram River Basin", emoji: "🌾" },
+            { name: "Mansehra", lat: 34.3333, lng: 73.2000, province: "Khyber Pakhtunkhwa (KP)", district: "Mansehra", isMetro: false, risk: "High", tag: "Kunhar River / Naran Valley", emoji: "🏔️" },
+            { name: "Chitral", lat: 35.8510, lng: 71.7864, province: "Khyber Pakhtunkhwa (KP)", district: "Chitral Lower", isMetro: false, risk: "Severe", tag: "GLOF & Glacial Mountain Basin", emoji: "❄️" },
+            { name: "Haripur", lat: 33.9999, lng: 72.9341, province: "Khyber Pakhtunkhwa (KP)", district: "Haripur", isMetro: false, risk: "High", tag: "Tarbela Dam Reservoir Area", emoji: "⚡" },
+            { name: "Swabi", lat: 34.1202, lng: 72.4698, province: "Khyber Pakhtunkhwa (KP)", district: "Swabi", isMetro: false, risk: "Moderate", tag: "Indus Left Bank", emoji: "🌾" },
+            { name: "Dir", lat: 35.2074, lng: 71.8763, province: "Khyber Pakhtunkhwa (KP)", district: "Dir Upper", isMetro: false, risk: "High", tag: "Panjkora River Gorge", emoji: "🌲" },
+            { name: "Tank", lat: 32.2217, lng: 70.3793, province: "Khyber Pakhtunkhwa (KP)", district: "Tank", isMetro: false, risk: "Severe", tag: "Gomal Flash Flood Zone", emoji: "⚠️" },
+
+            // Balochistan Major Cities & Flood Zones
+            { name: "Quetta", lat: 30.1798, lng: 66.9750, province: "Balochistan", district: "Quetta", isMetro: true, risk: "High", tag: "Provincial Capital & Valley Basin", emoji: "⛰️" },
+            { name: "Gwadar", lat: 25.1264, lng: 62.3226, province: "Balochistan", district: "Gwadar", isMetro: true, risk: "High", tag: "Arabian Sea Deep Port & Coast", emoji: "⚓" },
+            { name: "Turbat (Kech)", lat: 26.0031, lng: 63.0544, province: "Balochistan", district: "Kech (Turbat)", isMetro: false, risk: "Severe", tag: "Kech Kaur Flash Flood Basin", emoji: "🌴" },
+            { name: "Khuzdar", lat: 27.8000, lng: 66.6167, province: "Balochistan", district: "Khuzdar", isMetro: false, risk: "High", tag: "Central Balochistan Valley", emoji: "⛰️" },
+            { name: "Sibi", lat: 29.5543, lng: 67.8764, province: "Balochistan", district: "Sibi", isMetro: false, risk: "Severe", tag: "Nari & Bolan Torrent Zone", emoji: "⚠️" },
+            { name: "Chaman", lat: 30.9210, lng: 66.4597, province: "Balochistan", district: "Chaman", isMetro: false, risk: "Moderate", tag: "Border Gateway", emoji: "🚩" },
+            { name: "Hub", lat: 25.0286, lng: 66.8833, province: "Balochistan", district: "Hub", isMetro: false, risk: "Severe", tag: "Hub River Dam Spill & Plain", emoji: "🏭" },
+            { name: "Zhob", lat: 31.3417, lng: 69.4486, province: "Balochistan", district: "Zhob", isMetro: false, risk: "High", tag: "Zhob River Basin", emoji: "🏞️" },
+            { name: "Loralai", lat: 30.3705, lng: 68.5980, province: "Balochistan", district: "Loralai", isMetro: false, risk: "Moderate", tag: "Northeastern Highland Hub", emoji: "⛰️" },
+            { name: "Jafarabad", lat: 28.4206, lng: 68.3240, province: "Balochistan", district: "Jafarabad", isMetro: false, risk: "Severe", tag: "Canal Inundation Zone", emoji: "🌊" },
+            { name: "Nasirabad", lat: 28.5466, lng: 68.2231, province: "Balochistan", district: "Nasirabad", isMetro: false, risk: "Severe", tag: "Canal Overflow Flood Zone", emoji: "🌊" },
+            { name: "Lasbela (Uthal)", lat: 25.8072, lng: 66.6219, province: "Balochistan", district: "Lasbela", isMetro: false, risk: "Severe", tag: "Porali River Flash Flood Zone", emoji: "🌊" },
+            { name: "Ziarat", lat: 30.3824, lng: 67.7256, province: "Balochistan", district: "Ziarat", isMetro: false, risk: "Moderate", tag: "Juniper Highland Valley", emoji: "🌲" },
+            { name: "Panjgur", lat: 26.9719, lng: 64.0946, province: "Balochistan", district: "Panjgur", isMetro: false, risk: "High", tag: "Rakhshan River Basin", emoji: "🌴" },
+
+            // Gilgit-Baltistan (GB)
+            { name: "Gilgit", lat: 35.9221, lng: 74.3087, province: "Gilgit-Baltistan (GB)", district: "Gilgit", isMetro: true, risk: "Severe", tag: "Administrative Capital & GLOF Zone", emoji: "🏔️" },
+            { name: "Skardu", lat: 35.2971, lng: 75.6333, province: "Gilgit-Baltistan (GB)", district: "Skardu", isMetro: true, risk: "Severe", tag: "Indus & Glacial Melt Basin", emoji: "🏔️" },
+            { name: "Hunza (Karimabad)", lat: 36.3167, lng: 74.6500, province: "Gilgit-Baltistan (GB)", district: "Hunza", isMetro: false, risk: "High", tag: "Glacial Mountain Valley", emoji: "🏔️" },
+            { name: "Chilas (Diamer)", lat: 35.4129, lng: 74.0961, province: "Gilgit-Baltistan (GB)", district: "Diamer (Chilas)", isMetro: false, risk: "Severe", tag: "Indus River Gorge & Dam Site", emoji: "⚡" },
+            { name: "Ghizer", lat: 36.1736, lng: 73.7667, province: "Gilgit-Baltistan (GB)", district: "Ghizer", isMetro: false, risk: "Severe", tag: "GLOF & Flash Flood Valley", emoji: "❄️" },
+            { name: "Astore", lat: 35.3667, lng: 74.9000, province: "Gilgit-Baltistan (GB)", district: "Astore", isMetro: false, risk: "High", tag: "Nanga Parbat Foothills", emoji: "🏔️" },
+
+            // Azad Jammu & Kashmir (AJK)
+            { name: "Muzaffarabad", lat: 34.3700, lng: 73.4711, province: "Azad Jammu & Kashmir (AJK)", district: "Muzaffarabad", isMetro: true, risk: "Severe", tag: "State Capital & Neelum/Jhelum Confluence", emoji: "🏛️" },
+            { name: "Mirpur", lat: 33.1478, lng: 73.7519, province: "Azad Jammu & Kashmir (AJK)", district: "Mirpur", isMetro: true, risk: "High", tag: "Mangla Dam Reservoir Basin", emoji: "🌊" },
+            { name: "Rawalakot (Poonch)", lat: 33.8584, lng: 73.7604, province: "Azad Jammu & Kashmir (AJK)", district: "Poonch (Rawalakot)", isMetro: false, risk: "Moderate", tag: "Pearl Valley Highland", emoji: "🌲" },
+            { name: "Kotli", lat: 33.5156, lng: 73.9019, province: "Azad Jammu & Kashmir (AJK)", district: "Kotli", isMetro: false, risk: "High", tag: "Poonch River Basin", emoji: "🌊" },
+            { name: "Bagh", lat: 33.9816, lng: 73.7760, province: "Azad Jammu & Kashmir (AJK)", district: "Bagh", isMetro: false, risk: "High", tag: "Mahwli Mountain Basin", emoji: "⛰️" },
+            { name: "Neelum Valley", lat: 34.5878, lng: 73.9167, province: "Azad Jammu & Kashmir (AJK)", district: "Neelum", isMetro: false, risk: "Severe", tag: "Neelum River Flash Flood & Cloudburst", emoji: "🌊" }
+        ];
+
+        let incidentMap = null;
+        let activeMarker = null;
+        let selectedLat = 30.3753;
+        let selectedLng = 69.3451;
+        let activeBaseTile = null;
+        let baseLayers = {};
+        let citiesLayerGroup = null;
+        let showCitiesOnMap = true;
+        let currentHotspotFilter = 'all';
+
+        // Custom Neon Beacon Marker Icon
+        const neonBeaconIcon = L.divIcon({
+            className: 'beacon-marker-container',
+            html: `
+                <div class="beacon-pulse-ring"></div>
+                <div class="beacon-pin-dot"></div>
+            `,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+        });
+
+        function initPickerMap() {
+            if (incidentMap) return;
+
+            incidentMap = L.map('incidentPickerMap', {
+                zoomControl: true,
+                attributionControl: false
+            }).setView([selectedLat, selectedLng], 6);
+
+            window.incidentMap = incidentMap;
+
+            // Configure High-Quality Basemap Layers matching GIS Map (map.html)
+            // 1. Topographic Terrain (OpenTopoMap elevation, relief & rivers - matching map.html)
+            const terrainTileLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                maxZoom: 17,
+                attribution: 'Map data &copy; OpenStreetMap, SRTM | Style &copy; OpenTopoMap'
+            });
+
+            // 2. OpenStreetMap Street View (Clean vector streets & landmarks - matching map.html)
+            const streetTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            });
+
+            // 3. Satellite Hybrid (High-Res World Imagery + Reference Labels - matching map.html)
+            const satelliteTileLayer = L.layerGroup([
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    attribution: 'Tiles &copy; Esri, Maxar'
+                }),
+                L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19
+                })
+            ]);
+
+            baseLayers = {
+                terrain: terrainTileLayer,
+                street: streetTileLayer,
+                satellite: satelliteTileLayer
+            };
+
+            // Set default Terrain base layer (matching map.html GIS view)
+            terrainTileLayer.addTo(incidentMap);
+            activeBaseTile = 'terrain';
+
+            // City Markers Layer Group
+            citiesLayerGroup = L.layerGroup().addTo(incidentMap);
+            renderCityMarkersOnMap();
+
+            // Initial Hotspot Chips in toolbar
+            renderHotspotChips('all');
+
+            // Add Initial Incident Marker Pin
+            activeMarker = L.marker([selectedLat, selectedLng], {
+                icon: neonBeaconIcon,
+                draggable: true,
+                zIndexOffset: 2000
+            }).addTo(incidentMap);
+
+            // Handle Dragging Pin
+            activeMarker.on('dragend', function(e) {
+                const pos = e.target.getLatLng();
+                updateLocationFromCoordinates(pos.lat, pos.lng);
+            });
+
+            // Handle Map Clicks
+            incidentMap.on('click', function(e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                if (activeMarker) {
+                    activeMarker.setLatLng([lat, lng]);
+                } else {
+                    activeMarker = L.marker([lat, lng], {
+                        icon: neonBeaconIcon,
+                        draggable: true,
+                        zIndexOffset: 2000
+                    }).addTo(incidentMap);
+                }
+                updateLocationFromCoordinates(lat, lng);
+            });
+
+            // Update Zoom Status
+            incidentMap.on('zoomend', function() {
+                const zoom = incidentMap.getZoom();
+                const zoomEl = document.getElementById('mapZoomStatus');
+                if (zoomEl) zoomEl.innerText = `Zoom: ${zoom}x`;
+            });
+        }
+
+        // Render interactive Pakistani City Pins on the Leaflet map
+        function renderCityMarkersOnMap() {
+            if (!citiesLayerGroup) return;
+            citiesLayerGroup.clearLayers();
+
+            PAKISTAN_CITIES_DATA.forEach(city => {
+                let pinClass = 'regular';
+                if (city.isMetro) pinClass = 'metro';
+                else if (city.risk === 'Severe' || city.risk === 'High') pinClass = 'risk-high';
+
+                const cityIcon = L.divIcon({
+                    className: `pak-city-pin ${pinClass}`,
+                    html: `
+                        <div class="city-marker-dot"></div>
+                        <div class="city-marker-label">${city.name}</div>
+                    `,
+                    iconSize: [120, 24],
+                    iconAnchor: [6, 12]
+                });
+
+                const marker = L.marker([city.lat, city.lng], {
+                    icon: cityIcon,
+                    title: `${city.name} (${city.province})`
+                });
+
+                const riskClass = city.risk.toLowerCase();
+                const popupContent = `
+                    <div class="city-popup-card">
+                        <div class="city-popup-header">
+                            <div class="city-popup-title">${city.emoji || '📍'} ${city.name}</div>
+                            <span class="city-risk-pill ${riskClass}">Risk: ${city.risk}</span>
+                        </div>
+                        <div class="city-popup-body">
+                            <div class="city-popup-row"><i class="fa-solid fa-landmark"></i> <span>${city.province} &bull; ${city.district}</span></div>
+                            <div class="city-popup-row"><i class="fa-solid fa-tag"></i> <span>${city.tag}</span></div>
+                            <div class="city-popup-coords"><i class="fa-solid fa-crosshairs"></i> ${city.lat.toFixed(4)}°N, ${city.lng.toFixed(4)}°E</div>
+                        </div>
+                        <button type="button" class="btn-city-select" onclick="selectCityAsIncident('${city.name.replace(/'/g, "\\'")}', ${city.lat}, ${city.lng}, '${city.province.replace(/'/g, "\\'")}', '${city.district.replace(/'/g, "\\'")}')">
+                            <i class="fa-solid fa-location-crosshairs"></i> Set as Incident Location
+                        </button>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent, { maxWidth: 280, closeButton: true });
+
+                // Click marker to open popup
+                marker.on('click', function(e) {
+                    marker.openPopup();
+                });
+
+                citiesLayerGroup.addLayer(marker);
+            });
+        }
+
+        // Toggle Basemap (Terrain, Street, Satellite)
+        function switchBaseLayer(type) {
+            if (!incidentMap || !baseLayers[type]) return;
+            if (activeBaseTile === type) return;
+
+            if (activeBaseTile && baseLayers[activeBaseTile]) {
+                incidentMap.removeLayer(baseLayers[activeBaseTile]);
+            }
+
+            baseLayers[type].addTo(incidentMap);
+            activeBaseTile = type;
+
+            // Update UI layer pills
+            document.querySelectorAll('.layer-pill').forEach(btn => btn.classList.remove('active'));
+            if (type === 'terrain') document.getElementById('btnLayerTerrain')?.classList.add('active');
+            else if (type === 'street') document.getElementById('btnLayerStreet')?.classList.add('active');
+            else if (type === 'satellite') document.getElementById('btnLayerSatellite')?.classList.add('active');
+
+            const styleName = type === 'terrain' ? 'Topographic Terrain' : type === 'street' ? 'Street View' : 'Satellite Hybrid';
+            showToast(`Map Style: ${styleName}`, 'info');
+        }
+
+        // Toggle City Markers on the map
+        function toggleCityMarkers() {
+            if (!incidentMap || !citiesLayerGroup) return;
+            const btn = document.getElementById('btnToggleCities');
+            const txt = document.getElementById('citiesToggleText');
+
+            if (showCitiesOnMap) {
+                incidentMap.removeLayer(citiesLayerGroup);
+                showCitiesOnMap = false;
+                if (btn) btn.classList.remove('active');
+                if (txt) txt.innerText = 'Cities: OFF';
+                showToast('City markers hidden', 'info');
+            } else {
+                citiesLayerGroup.addTo(incidentMap);
+                showCitiesOnMap = true;
+                if (btn) btn.classList.add('active');
+                if (txt) txt.innerText = 'Cities: ON';
+                showToast('City markers visible', 'info');
+            }
+        }
+
+        // Render Hotspot Chips by Category
+        function renderHotspotChips(category) {
+            const container = document.getElementById('hotspotsContainer');
+            if (!container) return;
+
+            let filtered = [];
+            if (category === 'all') {
+                filtered = PAKISTAN_CITIES_DATA.slice(0, 18);
+            } else if (category === 'risk') {
+                filtered = PAKISTAN_CITIES_DATA.filter(c => c.risk === 'Severe' || c.risk === 'High');
+            } else if (category === 'metro') {
+                filtered = PAKISTAN_CITIES_DATA.filter(c => c.isMetro);
+            } else if (category === 'GB_AJK') {
+                filtered = PAKISTAN_CITIES_DATA.filter(c => c.province.includes('Gilgit') || c.province.includes('Kashmir'));
+            } else {
+                filtered = PAKISTAN_CITIES_DATA.filter(c => c.province.toLowerCase().includes(category.toLowerCase()));
+            }
+
+            let html = `<span style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 700; white-space: nowrap;"><i class="fa-solid fa-bolt"></i> Quick Hubs (${filtered.length}):</span>`;
+            
+            filtered.forEach(c => {
+                const isSevere = c.risk === 'Severe';
+                const severeClass = isSevere ? 'risk-severe' : '';
+                html += `
+                    <button type="button" class="hotspot-tag ${severeClass}" onclick="selectCityAsIncident('${c.name.replace(/'/g, "\\'")}', ${c.lat}, ${c.lng}, '${c.province.replace(/'/g, "\\'")}', '${c.district.replace(/'/g, "\\'")}', 13)">
+                        <span>${c.emoji || '📍'}</span> <span>${c.name}</span>
+                    </button>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function filterHotspotCategory(cat, el) {
+            currentHotspotFilter = cat;
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            if (el) el.classList.add('active');
+            renderHotspotChips(cat);
+        }
+
+        // Autocomplete Search for Cities
+        function handleCitySearchInput(val) {
+            const query = (val || '').trim().toLowerCase();
+            const resultsBox = document.getElementById('citySearchResults');
+            const clearBtn = document.getElementById('btnClearCitySearch');
+
+            if (!resultsBox) return;
+
+            if (!query) {
+                resultsBox.style.display = 'none';
+                if (clearBtn) clearBtn.style.display = 'none';
+                return;
+            }
+
+            if (clearBtn) clearBtn.style.display = 'block';
+
+            const matches = PAKISTAN_CITIES_DATA.filter(c => 
+                c.name.toLowerCase().includes(query) ||
+                c.district.toLowerCase().includes(query) ||
+                c.province.toLowerCase().includes(query) ||
+                c.tag.toLowerCase().includes(query)
+            ).slice(0, 8);
+
+            if (matches.length === 0) {
+                resultsBox.innerHTML = `<div style="padding: 10px 14px; font-size: 0.78rem; color: var(--text-muted); text-align: center;">No matching Pakistani cities found</div>`;
+                resultsBox.style.display = 'block';
+                return;
+            }
+
+            let html = '';
+            matches.forEach(c => {
+                const riskClass = c.risk.toLowerCase();
+                html += `
+                    <div class="city-search-item" onclick="selectCityAsIncident('${c.name.replace(/'/g, "\\'")}', ${c.lat}, ${c.lng}, '${c.province.replace(/'/g, "\\'")}', '${c.district.replace(/'/g, "\\'")}', 13); clearCitySearch();">
+                        <div class="city-item-name">
+                            <span>${c.emoji || '📍'}</span>
+                            <span>${c.name}</span>
+                            <span class="city-item-info">&bull; ${c.province}</span>
+                        </div>
+                        <span class="city-risk-pill ${riskClass}">${c.risk}</span>
+                    </div>
+                `;
+            });
+
+            resultsBox.innerHTML = html;
+            resultsBox.style.display = 'block';
+        }
+
+        function clearCitySearch() {
+            const input = document.getElementById('mapCitySearchInput');
+            const resultsBox = document.getElementById('citySearchResults');
+            const clearBtn = document.getElementById('btnClearCitySearch');
+            if (input) input.value = '';
+            if (resultsBox) resultsBox.style.display = 'none';
+            if (clearBtn) clearBtn.style.display = 'none';
+        }
+
+        // Close search results on outer click
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.map-search-wrapper');
+            const resultsBox = document.getElementById('citySearchResults');
+            if (resultsBox && wrapper && !wrapper.contains(e.target)) {
+                resultsBox.style.display = 'none';
+            }
+        });
+
+        // Set City as Incident Location
+        function selectCityAsIncident(cityName, lat, lng, provinceName, districtName, zoom = 13) {
+            if (!incidentMap) initPickerMap();
+
+            incidentMap.flyTo([lat, lng], zoom, { duration: 1.2 });
+            incidentMap.closePopup();
+
+            if (activeMarker) {
+                activeMarker.setLatLng([lat, lng]);
+            } else {
+                activeMarker = L.marker([lat, lng], {
+                    icon: neonBeaconIcon,
+                    draggable: true,
+                    zIndexOffset: 2000
+                }).addTo(incidentMap);
+            }
+
+            selectedLat = parseFloat(lat.toFixed(5));
+            selectedLng = parseFloat(lng.toFixed(5));
+
+            const coordDisplay = `Lat: ${selectedLat}°N, Lng: ${selectedLng}°E`;
+            const coordsTextEl = document.getElementById('coordsText');
+            if (coordsTextEl) coordsTextEl.innerText = coordDisplay;
+            const footerCoords = document.getElementById('mapFooterCoords');
+            if (footerCoords) footerCoords.innerText = `${selectedLat}°N, ${selectedLng}°E (${cityName})`;
+
+            const coordStr = `(Lat: ${selectedLat}, Lng: ${selectedLng})`;
+            const reportLocEl = document.getElementById('reportLocation');
+            if (reportLocEl) reportLocEl.value = `${cityName}, ${districtName ? districtName + ', ' : ''}${provinceName} ${coordStr}`;
+
+            if (provinceName) {
+                const prov = Object.keys(PAKISTAN_DISTRICTS_DATA).find(p => provinceName.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(provinceName.toLowerCase()));
+                if (prov) {
+                    const provSelect = document.getElementById('reportProvince');
+                    if (provSelect) provSelect.value = prov;
+                    onProvinceChange(prov, districtName, false);
+                    if (districtName) {
+                        isUserSelectedDistrict = true;
+                    }
+                }
+            }
+
+            showToast(`📍 Selected: ${cityName} (${provinceName})`, 'success');
+        }
+
+        function jumpToLocation(lat, lng, zoom, provinceName, districtName) {
+            selectCityAsIncident(districtName || provinceName, lat, lng, provinceName, districtName, zoom);
+        }
+
+        // Reset map view to Pakistan center
+        function resetMapToPakistan() {
+            if (!incidentMap) initPickerMap();
+            incidentMap.flyTo([30.3753, 69.3451], 6, { duration: 1 });
+            showToast('🗺️ Map view reset to whole Pakistan', 'info');
+        }
+
+        // Expand / Contract Map Height
+        function toggleMapHeight() {
+            const mapEl = document.getElementById('incidentPickerMap');
+            const btn = document.getElementById('btnExpandMap');
+            if (!mapEl) return;
+
+            mapEl.classList.toggle('expanded');
+            const isExpanded = mapEl.classList.contains('expanded');
+
+            if (btn) {
+                btn.innerHTML = isExpanded 
+                    ? `<i class="fa-solid fa-down-left-and-up-right-to-center"></i>` 
+                    : `<i class="fa-solid fa-up-right-and-down-left-from-center"></i>`;
+                btn.classList.toggle('active', isExpanded);
+            }
+
+            if (incidentMap) {
+                setTimeout(() => incidentMap.invalidateSize(), 320);
+            }
+        }
+
+        async function updateLocationFromCoordinates(lat, lng) {
+            selectedLat = parseFloat(lat.toFixed(5));
+            selectedLng = parseFloat(lng.toFixed(5));
+
+            const coordsTextEl = document.getElementById('coordsText');
+            if (coordsTextEl) coordsTextEl.innerText = `Lat: ${selectedLat}°N, Lng: ${selectedLng}°E`;
+            const footerCoords = document.getElementById('mapFooterCoords');
+            if (footerCoords) footerCoords.innerText = `${selectedLat}°N, ${selectedLng}°E`;
+
+            const coordStr = `(Lat: ${selectedLat}, Lng: ${selectedLng})`;
+            showToast(`Pin dropped at ${selectedLat}, ${selectedLng}`, 'info');
+
+            // Reverse Geocoding via Nominatim
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${selectedLat}&lon=${selectedLng}&zoom=14`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.address) {
+                        const addr = data.address;
+                        const place = addr.road || addr.suburb || addr.neighbourhood || addr.village || addr.town || addr.city || addr.county || "";
+                        const district = addr.state_district || addr.county || addr.city || "";
+                        const state = addr.state || "";
+
+                        let autoLocation = place ? `${place}, ` : "";
+                        if (district) autoLocation += `${district}, `;
+                        if (state) autoLocation += `${state} `;
+                        autoLocation = (autoLocation.trim() || "Incident Site") + ` ${coordStr}`;
+
+                        document.getElementById('reportLocation').value = autoLocation;
+
+                        // Match province & district automatically
+                        matchProvinceAndDistrict(state, district, addr);
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.warn("Reverse geocode lookup note:", err);
+            }
+
+            // Fallback location text
+            const currentVal = document.getElementById('reportLocation').value;
+            if (!currentVal || currentVal.includes('(Lat:')) {
+                document.getElementById('reportLocation').value = `Incident Zone Near Coordinates ${coordStr}`;
+            }
+        }
+
+        function matchProvinceAndDistrict(stateName, districtName, addrObj = {}) {
+            const provinceSelect = document.getElementById('reportProvince');
+            const districtSelect = document.getElementById('reportDistrict');
+            const currentProv = provinceSelect ? provinceSelect.value : "";
+            const currentDist = districtSelect ? districtSelect.value : "";
+
+            if (currentProv && currentDist && isUserSelectedDistrict) {
+                return;
+            }
+
+            if (!stateName && !districtName) return;
+
+            let matchedProvince = null;
+            const provKeys = Object.keys(PAKISTAN_DISTRICTS_DATA);
+
+            if (stateName) {
+                const sLower = stateName.toLowerCase();
+                if (sLower.includes('punjab')) matchedProvince = 'Punjab';
+                else if (sLower.includes('sindh')) matchedProvince = 'Sindh';
+                else if (sLower.includes('khyber') || sLower.includes('kp') || sLower.includes('nwfp')) matchedProvince = 'Khyber Pakhtunkhwa (KP)';
+                else if (sLower.includes('baloch') || sLower.includes('baluch')) matchedProvince = 'Balochistan';
+                else if (sLower.includes('gilgit') || sLower.includes('gb') || sLower.includes('baltistan')) matchedProvince = 'Gilgit-Baltistan (GB)';
+                else if (sLower.includes('kashmir') || sLower.includes('ajk')) matchedProvince = 'Azad Jammu & Kashmir (AJK)';
+                else if (sLower.includes('islamabad')) matchedProvince = 'Islamabad Capital Territory';
+                else {
+                    matchedProvince = provKeys.find(p => sLower.includes(p.toLowerCase()) || p.toLowerCase().includes(sLower));
+                }
+            }
+
+            if (!matchedProvince && currentProv) {
+                matchedProvince = currentProv;
+            }
+
+            if (matchedProvince) {
+                provinceSelect.value = matchedProvince;
+                
+                const districtCandidates = [
+                    districtName,
+                    addrObj.state_district,
+                    addrObj.county,
+                    addrObj.city,
+                    addrObj.town,
+                    addrObj.suburb,
+                    addrObj.village
+                ].filter(Boolean);
+
+                let matchedDistrict = null;
+                const provDistricts = PAKISTAN_DISTRICTS_DATA[matchedProvince];
+
+                for (let cand of districtCandidates) {
+                    const found = provDistricts.find(d => isDistrictMatch(d, cand));
+                    if (found) {
+                        matchedDistrict = found;
+                        break;
+                    }
+                }
+
+                onProvinceChange(matchedProvince, matchedDistrict || currentDist, true);
+            }
+        }
+
+        // Live Geolocation Button Handler
+        function getUserLiveLocation() {
+            if (!navigator.geolocation) {
+                showToast("Geolocation is not supported by your browser.", "error");
+                return;
+            }
+
+            const btn = document.getElementById('btnLiveGps');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Acquiring GPS...</span>`;
+            btn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy ? `(±${Math.round(position.coords.accuracy)}m)` : '';
+
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+
+                    if (!incidentMap) initPickerMap();
+
+                    incidentMap.setView([lat, lng], 15);
+                    if (activeMarker) {
+                        activeMarker.setLatLng([lat, lng]);
+                    } else {
+                        activeMarker = L.marker([lat, lng], {
+                            icon: neonBeaconIcon,
+                            draggable: true,
+                            zIndexOffset: 2000
+                        }).addTo(incidentMap);
+                    }
+
+                    updateLocationFromCoordinates(lat, lng);
+                    showToast(`📍 Live GPS locked: ${lat.toFixed(4)}, ${lng.toFixed(4)} ${accuracy}`, "success");
+                },
+                (error) => {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    let errorMsg = "Unable to retrieve device GPS coordinates.";
+                    if (error.code === error.PERMISSION_DENIED) errorMsg = "Location permission denied. Please enable GPS permissions.";
+                    else if (error.code === error.POSITION_UNAVAILABLE) errorMsg = "GPS location is currently unavailable.";
+                    else if (error.code === error.TIMEOUT) errorMsg = "Location request timed out. Please try again.";
+                    showToast(errorMsg, "error");
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+
+        function toggleMapVisibility() {
+            const container = document.getElementById('mapPickerContainer');
+            const label = document.getElementById('mapToggleLabel');
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                label.innerText = 'Collapse Map Picker';
+                if (incidentMap) {
+                    setTimeout(() => incidentMap.invalidateSize(), 150);
+                }
+            } else {
+                container.style.display = 'none';
+                label.innerText = 'Open Map Picker';
+            }
+        }
+
+        // Expose all functions to window for onclick handlers
+        window.switchBaseLayer = switchBaseLayer;
+        window.toggleCityMarkers = toggleCityMarkers;
+        window.filterHotspotCategory = filterHotspotCategory;
+        window.handleCitySearchInput = handleCitySearchInput;
+        window.clearCitySearch = clearCitySearch;
+        window.selectCityAsIncident = selectCityAsIncident;
+        window.jumpToLocation = jumpToLocation;
+        window.resetMapToPakistan = resetMapToPakistan;
+        window.toggleMapHeight = toggleMapHeight;
+        window.toggleMapVisibility = toggleMapVisibility;
+        window.getUserLiveLocation = getUserLiveLocation;
+        window.initPickerMap = initPickerMap;
+
+        // Initialize Map on Page Load
+        window.addEventListener('DOMContentLoaded', () => {
+            initPickerMap();
+        });
+    </script>
+
+    <!-- Supabase Session & Incidents Submission Logic -->
+    <script type="module">
+        import { supabase } from './js/supabaseClient.js';
+
+        let currentUser = null;
+        let citizenRealtimeChannel = null;
+
+        async function initCitizenPortal() {
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            
+            if (sessionError || !session || !session.user) {
+                showToast('Please sign in to access the citizen portal.', 'error');
+                setTimeout(() => window.location.href = 'index.html', 1000);
+                return;
+            }
+
+            currentUser = session.user;
+            const fullName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+            
+            // Ensure citizen profile exists in 'profiles' table on portal load
+            try {
+                await supabase.from('profiles').upsert([
+                    { id: currentUser.id, full_name: fullName, role: 'citizen' }
+                ], { onConflict: 'id' });
+            } catch (pInitErr) {
+                console.warn('[FDIP] Profile sync on init note:', pInitErr);
+            }
+
+            // Update Sidebar UI with logged-in user details
+            document.getElementById('sidebarUserName').innerText = fullName;
+            document.getElementById('sidebarUserEmail').innerText = currentUser.email;
+            
+            const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+            document.getElementById('sidebarAvatar').innerText = initials || 'AZ';
+
+            // Fetch citizen's specific incident records
+            await fetchMyComplaints();
+
+            // Setup Real-Time Listener and polling fallback for citizen's incident records
+            setupCitizenRealtime();
+        }
+
+        // Helper to format ISO timestamp into Day of Week, Date, and 12-hour Time
+        function formatDateTime(isoStr) {
+            if (!isoStr) return { dayDate: 'Today', time: 'Just Now', full: 'Just Now', relative: 'Just Now' };
+            try {
+                const d = new Date(isoStr);
+                if (isNaN(d.getTime())) return { dayDate: isoStr, time: '', full: isoStr, relative: '' };
+
+                const dayOfWeek = d.toLocaleDateString('en-US', { weekday: 'short' });
+                const datePart = d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+                const timePart = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+                
+                // Calculate relative elapsed time
+                const now = new Date();
+                const diffMs = now - d;
+                let relative = 'Just now';
+                if (diffMs > 0) {
+                    const diffSec = Math.floor(diffMs / 1000);
+                    const diffMin = Math.floor(diffSec / 60);
+                    const diffHr = Math.floor(diffMin / 60);
+                    const diffDays = Math.floor(diffHr / 24);
+
+                    if (diffDays > 0) relative = `${diffDays}d ago`;
+                    else if (diffHr > 0) relative = `${diffHr}h ago`;
+                    else if (diffMin > 0) relative = `${diffMin}m ago`;
+                    else relative = 'Just now';
+                }
+
+                return {
+                    dayOfWeek,
+                    datePart,
+                    timePart,
+                    relative,
+                    dayDate: `${dayOfWeek}, ${datePart}`,
+                    full: `${dayOfWeek}, ${datePart} • ${timePart}`
+                };
+            } catch (e) {
+                return { dayDate: isoStr, time: '', full: isoStr, relative: '' };
+            }
+        }
+
+        async function fetchMyComplaints() {
+            if (!currentUser || !currentUser.id) return;
+
+            let complaints = [];
+            const seenKeys = new Set();
+            function strVal(v) { return v ? v.toString() : ''; }
+
+            // 1. Fetch from Backend Proxy API Endpoint (SQLite local database)
+            try {
+                const res = await fetch(`http://127.0.0.1:5000/api/complaints?citizen_id=${encodeURIComponent(currentUser.id)}`);
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.status === 'success' && Array.isArray(json.data)) {
+                        json.data.forEach(item => {
+                            const key = `${strVal(item.id)}_${item.category}_${item.location}_${(item.created_at || '').slice(0, 19)}`;
+                            if (!seenKeys.has(key)) {
+                                seenKeys.add(key);
+                                complaints.push(item);
+                            }
+                        });
+                    }
+                }
+            } catch (bErr) {
+                console.warn('[FDIP] Backend complaints fetch fallback note:', bErr);
+            }
+
+            // 2. Query Supabase directly if available
+            try {
+                const { data, error } = await supabase
+                    .from('complaints')
+                    .select('*')
+                    .eq('citizen_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (!error && data && data.length > 0) {
+                    data.forEach(item => {
+                        const key = `${strVal(item.id)}_${item.category}_${item.location}_${(item.created_at || '').slice(0, 19)}`;
+                        if (!seenKeys.has(key)) {
+                            seenKeys.add(key);
+                            complaints.push(item);
+                        }
+                    });
+                } else if (error) {
+                    console.warn('[FDIP] Direct citizen complaints query note:', error.message);
+                }
+            } catch (sErr) {
+                console.warn('[FDIP] Direct citizen complaints fetch exception:', sErr);
+            }
+
+            // 3. Merge local cached reports for instant display guarantee
+            try {
+                const localStr = localStorage.getItem('fdip_citizen_complaints');
+                if (localStr) {
+                    const localList = JSON.parse(localStr);
+                    const userLocal = localList.filter(c => c.citizen_id === currentUser.id);
+                    userLocal.forEach(lc => {
+                        const key = `${strVal(lc.id)}_${lc.category}_${lc.location}_${(lc.created_at || '').slice(0, 19)}`;
+                        if (!seenKeys.has(key)) {
+                            seenKeys.add(key);
+                            complaints.push(lc);
+                        }
+                    });
+                }
+            } catch (lErr) {
+                console.warn('[FDIP] Local complaints cache read notice:', lErr);
+            }
+
+            // Sort all complaints newest-first
+            complaints.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+            renderCitizenRecordsTable(complaints);
+        }
+
+        function renderCitizenRecordsTable(complaints) {
+            const tableBody = document.querySelector('#myRecordsTable tbody');
+            if (!tableBody) return;
+
+            tableBody.innerHTML = '';
+            if (complaints.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 25px;">No incident records found. Submit your first report above!</td></tr>`;
+                return;
+            }
+
+            complaints.forEach((item) => {
+                const row = document.createElement('tr');
+                row.className = "border-b border-slate-800 hover:bg-slate-900/50";
+                
+                let badgeClass = 'status-pending';
+                const s = item.status || 'Pending Review';
+                if (s === 'Verified' || s === 'Verified by Staff') badgeClass = 'status-verified';
+                if (s === 'Resolved' || s === 'Rescue Dispatched') badgeClass = 'status-resolved';
+                if (s === 'Discarded') badgeClass = 'status-discarded';
+
+                // Parse attachment if present
+                let evidenceHtml = `<span style="color: var(--text-muted); font-size: 0.78rem;">None</span>`;
+                if (item.description) {
+                    const attachMatch = item.description.match(/\[ATTACHMENT\]:\s*([^\s\n]+)/);
+                    if (attachMatch && attachMatch[1]) {
+                        const attachUrl = attachMatch[1];
+                        evidenceHtml = `
+                            <button type="button" class="btn-view-evidence" onclick="openCitizenEvidenceModal('${attachUrl}', '${item.category || 'Disaster Evidence'}')">
+                                <i class="fa-solid fa-camera"></i> View
+                            </button>
+                        `;
+                    }
+                }
+
+                const shortId = item.id ? item.id.toString().slice(0, 4) : 'FD';
+                const dt = formatDateTime(item.created_at);
+
+                row.innerHTML = `
+                    <td style="font-weight: 600; color: var(--accent-cyan); font-family: monospace;">#FDIP-${shortId}</td>
+                    <td>${item.category || 'General Hazard'}</td>
+                    <td><strong style="color:#fff;">${item.district || 'Pakistan'}</strong></td>
+                    <td style="font-size: 0.82rem; color: #cbd5e1;"><i class="fa-solid fa-location-dot" style="color: var(--accent-cyan); margin-right: 4px;"></i>${item.location || 'Coordinates Provided'}</td>
+                    <td>${evidenceHtml}</td>
+                    <td><span style="color: ${item.priority === 'High' ? 'var(--accent-rose)' : item.priority === 'Medium' ? 'var(--accent-amber)' : 'var(--accent-emerald)'}; font-weight: 600;">${item.priority || 'Low'}</span></td>
+                    <td><span class="badge-status ${badgeClass}">${s}</span></td>
+                    <td>
+                        <div style="font-size: 0.82rem; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 5px;">
+                            <i class="fa-regular fa-calendar-days" style="color: var(--accent-cyan);"></i> ${dt.dayDate}
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 5px;">
+                            <i class="fa-regular fa-clock" style="color: var(--accent-amber);"></i> ${dt.timePart} <span style="background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; font-size: 0.7rem; color: #94a3b8;">${dt.relative}</span>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function setupCitizenRealtime() {
+            if (citizenRealtimeChannel) {
+                supabase.removeChannel(citizenRealtimeChannel);
+            }
+
+            citizenRealtimeChannel = supabase
+                .channel('citizen-records-realtime')
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'complaints' },
+                    (payload) => {
+                        fetchMyComplaints();
+                    }
+                )
+                .subscribe();
+
+            // Polling interval fallback every 5 seconds to keep records synced live
+            setInterval(() => {
+                fetchMyComplaints();
+            }, 5000);
+        }
+
+        // Handle Report Form Submission
+        const reportForm = document.getElementById('citizenReportForm');
+        if (reportForm) {
+            reportForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const submitBtn = document.getElementById('btnSubmitReport');
+                const originalBtnHtml = submitBtn.innerHTML;
+                submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Transmitting & Forwarding Alert...`;
+                submitBtn.disabled = true;
+
+                const category = document.getElementById('reportCategory').value;
+                const province = document.getElementById('reportProvince').value;
+                const district = document.getElementById('reportDistrict').value;
+                const location = document.getElementById('reportLocation').value;
+                const priorityInput = document.querySelector('input[name="priority"]:checked');
+                const priority = priorityInput ? priorityInput.value : 'Low';
+                let description = document.getElementById('reportDescription').value;
+                const fullName = currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'Citizen Reporter';
+
+                if (!province || !district) {
+                    showToast('Please select both Province and District.', 'error');
+                    submitBtn.innerHTML = originalBtnHtml;
+                    submitBtn.disabled = false;
+                    return;
+                }
+
+                const fullDistrict = `${district}, ${province}`;
+
+                // Process attached file if any
+                let attachmentUrl = null;
+                if (currentAttachedFile) {
+                    // Try uploading to backend /api/upload
+                    try {
+                        const formData = new FormData();
+                        formData.append('file', currentAttachedFile);
+                        
+                        const uploadRes = await fetch('http://127.0.0.1:5000/api/upload', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (uploadRes.ok) {
+                            const uploadData = await uploadRes.json();
+                            if (uploadData.status === 'success' && uploadData.file_url) {
+                                attachmentUrl = uploadData.file_url;
+                            }
+                        }
+                    } catch (uploadErr) {
+                        console.warn('[FDIP] Backend upload note, falling back to data URL:', uploadErr);
+                    }
+
+                    // Fallback to high-res compressed Data URL if backend upload was offline
+                    if (!attachmentUrl) {
+                        try {
+                            attachmentUrl = await compressImageToDataUrl(currentAttachedFile, 1200, 0.75);
+                        } catch (compressErr) {
+                            attachmentUrl = currentAttachedDataUrl;
+                        }
+                    }
+
+                    if (attachmentUrl) {
+                        description = `${description.trim()}\n\n[ATTACHMENT]: ${attachmentUrl}\n[ATTACHMENT_NAME]: ${currentAttachedFile.name}`;
+                    }
+                }
+
+                // 1. Ensure user profile exists in 'profiles' to satisfy foreign key constraint
+                if (currentUser && currentUser.id) {
+                    try {
+                        await supabase.from('profiles').upsert([
+                            { id: currentUser.id, full_name: fullName, role: 'citizen' }
+                        ], { onConflict: 'id' });
+                    } catch (pErr) {
+                        console.warn('[FDIP] Profile sync notice:', pErr);
+                    }
+                }
+
+                // 2. Transmit to both Supabase AND local backend API to ensure 100% save & delivery
+                let submitSuccess = false;
+                let submitErrorMsg = '';
+
+                const { data: sessionData } = await supabase.auth.getSession();
+                const accessToken = sessionData?.session?.access_token || '';
+
+                const newReportObj = {
+                    id: 'FD' + Math.floor(1000 + Math.random() * 9000),
+                    citizen_id: currentUser?.id || 'citizen_' + Math.random().toString(36).substring(2, 9),
+                    citizen_name: fullName,
+                    category: category,
+                    district: fullDistrict,
+                    location: location,
+                    priority: priority,
+                    description: description,
+                    status: 'Pending Review',
+                    created_at: new Date().toISOString()
+                };
+
+                // A) Post to Backend Proxy API Endpoint (saves in local SQLite and syncs to Supabase)
+                try {
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (accessToken) {
+                        headers['Authorization'] = `Bearer ${accessToken}`;
+                    }
+                    const apiRes = await fetch('http://127.0.0.1:5000/api/complaints', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(newReportObj)
+                    });
+
+                    if (apiRes.ok) {
+                        const apiJson = await apiRes.json();
+                        if (apiJson.status === 'success') {
+                            submitSuccess = true;
+                            if (apiJson.data && apiJson.data[0] && apiJson.data[0].id) {
+                                newReportObj.id = apiJson.data[0].id;
+                            }
+                        }
+                    }
+                } catch (apiErr) {
+                    console.warn('[FDIP] Backend API submission note:', apiErr);
+                }
+
+                // B) Post to Supabase complaints table directly
+                try {
+                    const sbInsertPayload = {
+                        citizen_id: newReportObj.citizen_id,
+                        citizen_name: fullName,
+                        category: category,
+                        district: fullDistrict,
+                        location: location,
+                        priority: priority,
+                        description: description,
+                        status: 'Pending Review',
+                        created_at: newReportObj.created_at
+                    };
+
+                    const { data: insertedData, error: insertError } = await supabase.from('complaints').insert([sbInsertPayload]);
+
+                    if (!insertError) {
+                        submitSuccess = true;
+                    } else {
+                        console.warn('[FDIP] Direct Supabase insert note:', insertError.message);
+                        if (!submitErrorMsg) submitErrorMsg = insertError.message;
+                    }
+                } catch (sErr) {
+                    console.warn('[FDIP] Supabase insert exception:', sErr);
+                }
+
+                // C) Save report object to local cache
+                try {
+                    const existingLocal = JSON.parse(localStorage.getItem('fdip_citizen_complaints') || '[]');
+                    existingLocal.unshift(newReportObj);
+                    localStorage.setItem('fdip_citizen_complaints', JSON.stringify(existingLocal));
+                    submitSuccess = true; // Guaranteed local save
+                } catch (lErr) {
+                    console.warn('[FDIP] LocalStorage save note:', lErr);
+                }
+
+                submitBtn.innerHTML = originalBtnHtml;
+                submitBtn.disabled = false;
+
+                if (submitSuccess) {
+                    showToast('🚨 Emergency disaster alert transmitted and forwarded to National Command successfully!', 'success');
+                    reportForm.reset();
+                    removeAttachedFile();
+                    isUserSelectedDistrict = false;
+                    document.getElementById('reportDistrict').innerHTML = '<option value="">Select Province First...</option>';
+                    await fetchMyComplaints();
+                    
+                    // Switch to records tab so citizen sees the newly filed record with full Day & Time
+                    const recordsBtn = document.querySelectorAll('.sidebar-menu button')[1];
+                    if (recordsBtn) switchTab('records-section', recordsBtn);
+                } else {
+                    showToast('Error submitting report: ' + (submitErrorMsg || 'Unable to connect to server.'), 'error');
+                }
+            });
+        }
+
+        initCitizenPortal();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,2567 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Command Portal &bull; Pakistan Flood & Disaster Intelligence</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ============================================================
+           STAFF COMMAND PORTAL — THEME LAYER (Phase 2)
+           Injected on top of existing styles. All class names, IDs,
+           HTML structure, and backend bindings are untouched.
+           ============================================================ */
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+        :root {
+            /* Staff Command Portal accent system: Amber + Red = authority, urgency */
+            --sp-primary:       #f59e0b;   /* Amber — primary actions, active states */
+            --sp-critical:      #ef4444;   /* Red — high danger, critical alerts */
+            --sp-safe:          #22c55e;   /* Green — safe/resolved */
+            --sp-info:          #38bdf8;   /* Steel blue — informational */
+            --sp-bg:            #050810;   /* Colder, more clinical near-black */
+            --sp-sidebar:       #07091a;   /* Darkest for sidebar contrast */
+            --sp-card:          rgba(7, 11, 22, 0.94);
+            --sp-card-hover:    rgba(14, 20, 38, 0.97);
+            --sp-border:        rgba(245, 158, 11, 0.16); /* Amber-tinted border */
+            --sp-border-dim:    rgba(255, 255, 255, 0.07);
+            --sp-focus:         rgba(245, 158, 11, 0.30);
+            --sp-mono:          'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+        }
+
+        /* --- Body: colder, more sterile background --- */
+        body {
+            background-color: var(--sp-bg);
+            background-image:
+                linear-gradient(to bottom, rgba(245, 158, 11, 0.03), rgba(5, 8, 16, 0.65)),
+                url('../images/g2.jpg');
+        }
+
+        /* --- Admin header box: cold command gradient + amber border --- */
+        .admin-header-box {
+            background: linear-gradient(180deg,
+                rgba(10, 14, 28, 0.97),
+                rgba(7, 11, 22, 0.95)) !important;
+            border: 1px solid var(--sp-border) !important;
+            border-radius: 8px !important;
+        }
+
+        /* --- KPI stat boxes: amber accent bar + monospace numbers --- */
+        .stat-box {
+            background: var(--sp-card) !important;
+            border: 1px solid var(--sp-border-dim) !important;
+            border-radius: 8px !important;
+            transition: all 0.25s ease !important;
+        }
+
+        .stat-box:hover {
+            background: var(--sp-card-hover) !important;
+            border-color: var(--sp-border) !important;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.12) !important;
+        }
+
+        .stat-box::before {
+            background: var(--sp-primary) !important; /* Amber default accent bar */
+        }
+
+        .stat-box.high::before {
+            background: var(--sp-critical) !important;
+        }
+
+        .stat-box.resolved::before {
+            background: var(--sp-safe) !important;
+        }
+
+        /* --- KPI numbers: monospace, large, high-contrast --- */
+        .stat-box h3 {
+            font-family: var(--sp-mono) !important;
+            font-size: 2.2rem !important;
+            font-weight: 700 !important;
+            color: #f8fafc !important;
+            letter-spacing: -0.5px !important;
+            line-height: 1 !important;
+            margin-bottom: 8px !important;
+        }
+
+        /* --- Stat box label: command-style uppercase --- */
+        .stat-box p {
+            font-size: 0.72rem !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1.5px !important;
+            color: var(--text-muted) !important;
+            font-weight: 600 !important;
+        }
+
+        /* --- Master table card: cold glass look --- */
+        .master-table-card {
+            background: var(--sp-card) !important;
+            border: 1px solid var(--sp-border-dim) !important;
+            border-radius: 10px !important;
+        }
+
+        /* --- Table header: amber-accented bottom border --- */
+        #masterTable th {
+            border-bottom: 2px solid rgba(245, 158, 11, 0.40) !important;
+            background: linear-gradient(180deg,
+                rgba(12, 18, 35, 0.98),
+                rgba(8, 12, 24, 0.99)) !important;
+            font-size: 10.5px !important;
+            letter-spacing: 0.6px !important;
+        }
+
+        #masterTable th i {
+            color: var(--sp-primary) !important; /* Amber icons in header */
+        }
+
+        /* --- Table row hover: amber-tinted highlight --- */
+        #masterTable tbody tr:hover {
+            background: rgba(245, 158, 11, 0.06) !important;
+        }
+
+        /* --- Ticket ID tags: amber-accented for staff portal --- */
+        .ticket-id-tag {
+            color: var(--sp-primary) !important;
+            background: rgba(245, 158, 11, 0.10) !important;
+            border-color: rgba(245, 158, 11, 0.30) !important;
+            font-family: var(--sp-mono) !important;
+        }
+
+        /* --- Filter controls: amber focus state --- */
+        .filter-controls select,
+        .filter-controls input {
+            border-radius: 6px !important;
+        }
+
+        .filter-controls select:focus,
+        .filter-controls input:focus {
+            border-color: var(--sp-primary) !important;
+            box-shadow: 0 0 0 3px var(--sp-focus) !important;
+        }
+
+        /* --- Refresh button: amber accent --- */
+        .btn-refresh {
+            background: rgba(245, 158, 11, 0.12) !important;
+            border-color: rgba(245, 158, 11, 0.40) !important;
+            color: var(--sp-primary) !important;
+        }
+
+        .btn-refresh:hover {
+            background: rgba(245, 158, 11, 0.25) !important;
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.30) !important;
+        }
+
+        /* --- Admin avatar: amber gradient --- */
+        .admin-avatar {
+            background: linear-gradient(135deg, var(--sp-primary), #b45309) !important;
+        }
+
+        /* --- Feed count badge: amber tint for staff context --- */
+        .feed-count-badge {
+            background: rgba(245, 158, 11, 0.12) !important;
+            color: var(--sp-primary) !important;
+            border-color: rgba(245, 158, 11, 0.35) !important;
+        }
+
+        /* --- Dossier modal: amber-accented border --- */
+        .dossier-modal-card {
+            border-color: rgba(245, 158, 11, 0.35) !important;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.8),
+                        0 0 35px rgba(245,158,11,0.12) !important;
+        }
+
+        /* --- Action buttons: sharper, command-style border-radius --- */
+        .btn-view-notes,
+        .btn-action-delete,
+        .btn-modal-delete {
+            border-radius: 5px !important;
+        }
+
+        .btn-view-notes:hover {
+            background: rgba(245, 158, 11, 0.18) !important;
+            color: var(--sp-primary) !important;
+            border-color: rgba(245, 158, 11, 0.45) !important;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.25) !important;
+        }
+
+        /* --- Mobile responsive: single column layout --- */
+        @media (max-width: 992px) {
+            .admin-stats-row {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .admin-stats-row {
+                grid-template-columns: 1fr !important;
+            }
+        }
+        /* ============================================================
+           END STAFF COMMAND PORTAL THEME LAYER
+           ============================================================ */
+        /* Toast Notification Styles */
+        #toastContainer {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--card-bg, #0f172a);
+            border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease forwards;
+            min-width: 280px;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--accent-emerald, #34d399);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--accent-rose, #fb7185);
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--accent-cyan, #22d3ee);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .admin-container {
+            max-width: 1350px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .admin-header-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-glass);
+            padding: 25px 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .admin-user-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-glass);
+            padding: 8px 16px;
+            border-radius: 30px;
+        }
+
+        .admin-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-amber), #d97706);
+            color: #070a13;
+            font-weight: 800;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-glass);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-cyan);
+        }
+
+        .stat-box.pending::before {
+            background: var(--accent-amber);
+        }
+
+        .stat-box.high::before {
+            background: var(--accent-rose);
+        }
+
+        .stat-box.resolved::before {
+            background: var(--accent-emerald);
+        }
+
+        .stat-box h3 {
+            font-size: 1.8rem;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .stat-box p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .master-table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 24px 26px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .feed-count-badge {
+            font-size: 0.72rem;
+            font-weight: 600;
+            background: rgba(34, 211, 238, 0.12);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.3px;
+            margin-left: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-controls select,
+        .filter-controls input {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid var(--border-glass);
+            padding: 9px 14px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .filter-controls select:focus,
+        .filter-controls input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
+            background: rgba(15, 23, 42, 0.98);
+        }
+
+        .filter-controls select option {
+            background: #0f172a;
+            color: #fff;
+        }
+
+        .btn-refresh {
+            background: rgba(34, 211, 238, 0.12);
+            border: 1px solid rgba(34, 211, 238, 0.4);
+            color: var(--accent-cyan);
+            padding: 9px 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-refresh:hover {
+            background: rgba(34, 211, 238, 0.25);
+            box-shadow: 0 0 12px rgba(34, 211, 238, 0.3);
+        }
+
+        /* Responsive Tabular Table Container (Strict 100% Width, No Horizontal Scroll) */
+        .table-responsive-wrapper {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(8, 13, 24, 0.65);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Master Incident Table (Strict 100% width, table-layout: fixed) */
+        #masterTable {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 0;
+            box-sizing: border-box;
+        }
+
+        #masterTable th {
+            background: linear-gradient(180deg, rgba(20, 29, 47, 0.95), rgba(12, 19, 33, 0.98));
+            color: #f1f5f9;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 8px 8px;
+            text-align: left;
+            vertical-align: middle;
+            border-bottom: 2px solid rgba(34, 211, 238, 0.35);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-sizing: border-box;
+        }
+
+        #masterTable th i {
+            color: var(--accent-cyan);
+            margin-right: 4px;
+            font-size: 10.5px;
+        }
+
+        #masterTable td {
+            padding: 6px 8px;
+            text-align: left;
+            vertical-align: middle;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 11.5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-sizing: border-box;
+            transition: background 0.15s ease;
+        }
+
+        #masterTable tbody tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.015);
+        }
+
+        #masterTable tbody tr:nth-child(odd) {
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        #masterTable tbody tr:hover {
+            background: rgba(34, 211, 238, 0.045);
+        }
+
+        /* Proportional Column Width Rules (Sum: 100%) */
+        .col-ticket {
+            width: 10%;
+        }
+
+        .col-datetime {
+            width: 14%;
+        }
+
+        .col-citizen {
+            width: 12%;
+        }
+
+        .col-category {
+            width: 16%;
+        }
+
+        .col-location {
+            width: 16%;
+        }
+
+        .col-priority {
+            width: 9%;
+        }
+
+        .col-status {
+            width: 11%;
+        }
+
+        .col-actions {
+            width: 12%;
+        }
+
+        /* Cell Component Styles (Eliminating Text Overlap & Squeezing) */
+        .ticket-id-tag {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            background: rgba(34, 211, 238, 0.1);
+            border: 1px solid rgba(34, 211, 238, 0.28);
+            padding: 2px 5px;
+            border-radius: 4px;
+            display: inline-block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .date-primary {
+            font-size: 11px;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .date-primary i {
+            color: var(--accent-cyan);
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        .time-secondary {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 1px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .time-secondary i {
+            color: var(--accent-amber);
+            font-size: 9.5px;
+            flex-shrink: 0;
+        }
+
+        .rel-time-pill {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 0.5px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            color: #cbd5e1;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .citizen-cell {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .citizen-avatar-sm {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(2, 132, 199, 0.4));
+            border: 1px solid rgba(34, 211, 238, 0.4);
+            color: var(--accent-cyan);
+            font-weight: 700;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .citizen-info {
+            min-width: 0;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .citizen-name {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 11.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .citizen-tag {
+            font-size: 9.5px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .category-pill-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-width: 100%;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .category-name {
+            color: #f1f5f9;
+            font-weight: 600;
+            font-size: 11.5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .category-name i {
+            color: var(--accent-cyan);
+            font-size: 10.5px;
+            flex-shrink: 0;
+        }
+
+        .attachment-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: rgba(34, 211, 238, 0.15);
+            border: 1px solid rgba(34, 211, 238, 0.4);
+            color: var(--accent-cyan);
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            width: fit-content;
+        }
+
+        .attachment-pill:hover {
+            background: rgba(34, 211, 238, 0.3);
+            box-shadow: 0 0 8px rgba(34, 211, 238, 0.3);
+        }
+
+        .location-primary {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 11.5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .location-primary i {
+            color: var(--accent-cyan);
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        .location-coords {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            font-family: monospace;
+        }
+
+        /* Priority Urgency Badges */
+        .priority-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+            letter-spacing: 0.2px;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .priority-indicator {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .priority-high {
+            background: rgba(251, 113, 133, 0.15);
+            color: var(--accent-rose);
+            border: 1px solid rgba(251, 113, 133, 0.4);
+        }
+
+        .priority-high .priority-indicator {
+            background: var(--accent-rose);
+            box-shadow: 0 0 5px var(--accent-rose);
+            animation: pulseHigh 1.8s infinite;
+        }
+
+        @keyframes pulseHigh {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        .priority-medium {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--accent-amber);
+            border: 1px solid rgba(251, 191, 36, 0.4);
+        }
+
+        .priority-medium .priority-indicator {
+            background: var(--accent-amber);
+        }
+
+        .priority-low {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(52, 211, 153, 0.4);
+        }
+
+        .priority-low .priority-indicator {
+            background: var(--accent-emerald);
+        }
+
+        /* Status Lifecycle Badges */
+        .status-badge {
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .status-pending {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--accent-amber);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+        }
+
+        .status-verified {
+            background: rgba(34, 211, 238, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(34, 211, 238, 0.35);
+        }
+
+        .status-dispatched {
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.35);
+        }
+
+        .status-resolved {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+        }
+
+        .status-discarded {
+            background: rgba(251, 113, 133, 0.15);
+            color: var(--accent-rose);
+            border: 1px solid rgba(251, 113, 133, 0.35);
+        }
+
+        /* Command Actions Cluster */
+        .action-buttons-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            max-width: 100%;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .status-select {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--border-glass);
+            padding: 3px 4px;
+            border-radius: 4px;
+            color: white;
+            font-size: 10.5px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            max-width: 68px;
+            min-width: 0;
+            flex: 1 1 auto;
+            box-sizing: border-box;
+        }
+
+        .status-select:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 6px rgba(34, 211, 238, 0.3);
+        }
+
+        .btn-view-notes {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-glass);
+            color: #e2e8f0;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 10.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            flex-shrink: 0;
+        }
+
+        .btn-view-notes:hover {
+            background: rgba(34, 211, 238, 0.2);
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 8px rgba(34, 211, 238, 0.25);
+        }
+
+        .btn-action-delete {
+            background: rgba(251, 113, 133, 0.1);
+            color: var(--accent-rose);
+            border: 1px solid rgba(251, 113, 133, 0.35);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 10.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            flex-shrink: 0;
+        }
+
+        .btn-action-delete:hover {
+            background: rgba(251, 113, 133, 0.3);
+            border-color: var(--accent-rose);
+            color: #fff;
+            box-shadow: 0 0 8px rgba(251, 113, 133, 0.35);
+        }
+
+        .btn-modal-delete {
+            background: rgba(251, 113, 133, 0.15);
+            color: var(--accent-rose);
+            border: 1px solid rgba(251, 113, 133, 0.4);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-modal-delete:hover {
+            background: #e11d48;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(225, 29, 72, 0.4);
+        }
+
+        /* ==========================================================================
+           INSPECT DOSSIER MODAL (Wide 2-Column Layout, Sticky Header & Sticky Footer)
+           ========================================================================== */
+        .dossier-modal-card {
+            max-width: 1000px !important;
+            width: 95% !important;
+            max-height: 90vh !important;
+            height: 90vh !important;
+            padding: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            background: #0b1326 !important;
+            border: 1px solid rgba(34, 211, 238, 0.35) !important;
+            border-radius: 14px !important;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(34, 211, 238, 0.15) !important;
+            overflow: hidden !important;
+            position: relative;
+        }
+
+        /* Fixed / Sticky Header */
+        .dossier-modal-header {
+            padding: 16px 24px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(11, 18, 33, 0.95));
+            border-bottom: 1px solid var(--border-glass);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            gap: 15px;
+        }
+
+        .dossier-title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dossier-icon-badge {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: rgba(34, 211, 238, 0.15);
+            border: 1px solid rgba(34, 211, 238, 0.4);
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .dossier-title {
+            margin: 0 !important;
+            font-size: 1.2rem !important;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dossier-subtitle {
+            margin: 3px 0 0 0 !important;
+            font-size: 0.78rem !important;
+            color: var(--text-muted);
+        }
+
+        .dossier-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-close-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-glass);
+            color: #cbd5e1;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close-btn:hover {
+            background: rgba(251, 113, 133, 0.2);
+            color: var(--accent-rose);
+            border-color: rgba(251, 113, 133, 0.4);
+        }
+
+        /* Scrollable Modal Body */
+        .dossier-modal-body {
+            padding: 20px 24px;
+            overflow-y: auto;
+            flex: 1 1 auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(34, 211, 238, 0.35) rgba(15, 23, 42, 0.7);
+        }
+
+        .dossier-modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dossier-modal-body::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .dossier-modal-body::-webkit-scrollbar-thumb {
+            background: rgba(34, 211, 238, 0.35);
+            border-radius: 3px;
+        }
+
+        /* 2-Column Grid Layout */
+        .dossier-grid {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .dossier-left-col,
+        .dossier-right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .dossier-section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        /* Subgrid for Left Metadata */
+        .dossier-meta-subgrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .dossier-meta-card {
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .dossier-meta-card.full-span {
+            grid-column: span 2;
+        }
+
+        .meta-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .meta-label i {
+            color: var(--accent-cyan);
+            font-size: 0.72rem;
+        }
+
+        .meta-value {
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: #ffffff;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .meta-value.ticket-highlight {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-cyan);
+            font-size: 0.86rem;
+        }
+
+        .meta-value.citizen-highlight {
+            color: #ffffff;
+        }
+
+        .meta-value.category-highlight {
+            color: #f1f5f9;
+        }
+
+        .meta-value.location-highlight {
+            color: #cbd5e1;
+            font-size: 0.82rem;
+            line-height: 1.4;
+        }
+
+        /* Notes Box in Right Column */
+        .dossier-block {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .notes-box {
+            background: rgba(8, 13, 24, 0.8);
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            padding: 12px 14px;
+            color: #cbd5e1;
+            font-size: 0.83rem;
+            line-height: 1.55;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 150px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        /* Evidence Card in Right Column */
+        .evidence-dossier-card {
+            background: rgba(8, 13, 24, 0.8);
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .evidence-thumb-wrapper {
+            width: 120px;
+            height: 80px;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #000;
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            cursor: pointer;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .evidence-thumb-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.25s ease;
+        }
+
+        .evidence-thumb-wrapper:hover img {
+            transform: scale(1.06);
+        }
+
+        .evidence-actions-box {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .no-evidence-box {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Sticky Fixed Modal Footer */
+        .dossier-modal-footer {
+            padding: 12px 24px;
+            background: rgba(11, 18, 33, 0.98);
+            border-top: 1px solid var(--border-glass);
+            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .footer-left-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .status-change-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .footer-status-select {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--border-glass);
+            padding: 7px 10px;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.8rem;
+            outline: none;
+            cursor: pointer;
+            max-width: 145px;
+        }
+
+        .footer-status-select:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .footer-btn-save {
+            padding: 7px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border-radius: 6px;
+        }
+
+        .footer-right-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .footer-btn-close {
+            padding: 7px 14px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border-radius: 6px;
+        }
+
+        @media(max-width: 992px) {
+            .admin-stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .admin-header-box {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .dossier-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .dossier-modal-footer {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .footer-left-controls,
+            .footer-right-controls {
+                justify-content: space-between;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Header Navbar -->
+    <header>
+        <div class="logo-section">
+            <div class="logo-box">FDIP</div>
+            <div class="logo-text">
+                <h1>Pakistan Flood & Disaster Intelligence</h1>
+                <p>National Staff Command Center</p>
+            </div>
+        </div>
+
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="map.html">GIS Map</a>
+            <a href="alerts.html">Alerts</a>
+            <a href="citizen.html">Citizen Portal</a>
+            <a href="admin.html" class="active">Staff Command</a>
+        </div>
+
+        <div class="auth-btn-group" id="navAuthGroup">
+            <button class="btn-auth btn-login" onclick="logoutAdmin()">Sign Out</button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="admin-container">
+
+        <!-- Header Banner -->
+        <div class="admin-header-box">
+            <div>
+                <h2 style="color: #fff; font-size: 1.5rem; margin-bottom: 5px;">
+                    <i class="fa-solid fa-shield-halved" style="color: var(--accent-amber);"></i> National Operations
+                    Command Center
+                </h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Real-time monitoring, verification, and
+                    dispatch console for citizen-submitted disaster reports and multi-hazard feeds across Pakistan.</p>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <div class="admin-user-badge" id="adminUserBadge">
+                    <div class="admin-avatar" id="adminAvatar">AD</div>
+                    <div>
+                        <div style="font-size: 0.85rem; font-weight: 600; color: #fff;" id="adminDisplayName">Staff
+                            Official</div>
+                        <div style="font-size: 0.72rem; color: var(--accent-amber);" id="adminDisplayEmail">
+                            admin@fdip.org</div>
+                    </div>
+                </div>
+                <span class="live-badge-pill" style="margin-bottom: 0;">
+                    <div class="pulse-dot"></div> <span id="realtimeStatus">LIVE PIPELINE CONNECTED</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Metrics Row -->
+        <div class="admin-stats-row">
+            <div class="stat-box pending">
+                <h3 id="statPending">0</h3>
+                <p>Pending Citizen Reports</p>
+            </div>
+            <div class="stat-box high">
+                <h3 id="statHigh">0</h3>
+                <p>High Priority Emergencies</p>
+            </div>
+            <div class="stat-box resolved">
+                <h3 id="statResolved">0</h3>
+                <p>Dispatched / Verified</p>
+            </div>
+            <div class="stat-box">
+                <h3 id="statTotal">0</h3>
+                <p>Total Registered Incidents</p>
+            </div>
+        </div>
+
+        <!-- Master Citizen Complaints Table -->
+        <div class="master-table-card">
+            <div class="filter-row">
+                <div>
+                    <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-list-check" style="color: var(--accent-cyan);"></i>
+                        Citizen Incident Master Feed
+                        <span id="feedCountBadge" class="feed-count-badge">0 Incidents</span>
+                    </h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">Real-time synchronized national incident reports from citizen telemetry and field reporting channels.</p>
+                </div>
+                <div class="filter-controls">
+                    <select id="priorityFilter" onchange="applyFilters()">
+                        <option value="all">Priority: All</option>
+                        <option value="High">High / Critical</option>
+                        <option value="Medium">Medium Threat</option>
+                        <option value="Low">Low Risk</option>
+                    </select>
+                    <select id="statusFilter" onchange="applyFilters()">
+                        <option value="all">Status: All</option>
+                        <option value="Pending">Pending Review</option>
+                        <option value="Verified">Verified by Staff</option>
+                        <option value="Dispatched">Rescue Dispatched</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Discarded">Discarded</option>
+                    </select>
+                    <input type="text" id="searchInput" placeholder="Search ID, district, citizen, hazard..."
+                        onkeyup="applyFilters()">
+                    <button class="btn-refresh" onclick="refreshAdminData()" title="Force refresh feed">
+                        <i class="fa-solid fa-arrows-rotate" id="refreshIcon"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table id="masterTable">
+                    <thead>
+                        <tr>
+                            <th class="col-ticket"><i class="fa-solid fa-hashtag"></i> Ticket</th>
+                            <th class="col-datetime"><i class="fa-regular fa-calendar-days"></i> Date & Time</th>
+                            <th class="col-citizen"><i class="fa-solid fa-user-shield"></i> Citizen</th>
+                            <th class="col-category"><i class="fa-solid fa-triangle-exclamation"></i> Hazard Category</th>
+                            <th class="col-location"><i class="fa-solid fa-location-dot"></i> District / Location</th>
+                            <th class="col-priority"><i class="fa-solid fa-signal"></i> Priority</th>
+                            <th class="col-status"><i class="fa-solid fa-circle-notch"></i> Status</th>
+                            <th class="col-actions"><i class="fa-solid fa-sliders"></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                                <i class="fa-solid fa-spinner fa-spin"
+                                    style="margin-right: 8px; color: var(--accent-cyan); font-size: 1.1rem;"></i> Connecting to national disaster database...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Auth / Modal for Admin Sign In / Registration (In case session is needed) -->
+    <div class="modal-overlay" id="authModal" style="display: none;">
+        <div class="modal-card">
+            <button class="modal-close-btn" onclick="closeAuthModal()">&times;</button>
+            <div id="modalContent">
+                <!-- Dynamic Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Incident Detail Inspection Modal (Wide 2-Column Dossier with Sticky Header & Sticky Footer) -->
+    <div class="modal-overlay" id="detailModal" style="display: none;">
+        <div class="modal-card dossier-modal-card">
+            <!-- Fixed / Sticky Modal Header -->
+            <div class="dossier-modal-header">
+                <div class="dossier-header-info">
+                    <div class="dossier-title-row">
+                        <span class="dossier-icon-badge"><i class="fa-solid fa-file-shield"></i></span>
+                        <div>
+                            <h3 class="dossier-title">Incident Report Dossier</h3>
+                            <p class="dossier-subtitle" id="modalTicketSubtitle">Official telemetry verification, field notes & citizen evidence</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="dossier-header-actions">
+                    <span id="detailStatusBadge" class="status-badge status-pending">Pending Review</span>
+                    <button type="button" class="modal-close-btn" onclick="closeDetailModal()" title="Close Dossier (Esc)">&times;</button>
+                </div>
+            </div>
+
+            <!-- Scrollable Modal Body with 2-Column Grid -->
+            <div class="dossier-modal-body">
+                <div class="dossier-grid">
+                    <!-- Left Column: Structured Ticket Metadata & Spatial Coordinates -->
+                    <div class="dossier-left-col">
+                        <div class="dossier-section-title">
+                            <i class="fa-solid fa-circle-info" style="color: var(--accent-cyan);"></i> Telemetry & Reporter Dossier
+                        </div>
+
+                        <div class="dossier-meta-subgrid">
+                            <div class="dossier-meta-card">
+                                <span class="meta-label"><i class="fa-solid fa-hashtag"></i> Ticket Identifier</span>
+                                <div class="meta-value ticket-highlight" id="detailTicketId">#FDIP-0000</div>
+                            </div>
+                            <div class="dossier-meta-card">
+                                <span class="meta-label"><i class="fa-regular fa-calendar-days"></i> Timestamp</span>
+                                <div class="meta-value" id="detailDate">-</div>
+                            </div>
+                            <div class="dossier-meta-card">
+                                <span class="meta-label"><i class="fa-solid fa-user-shield"></i> Reporter</span>
+                                <div class="meta-value citizen-highlight" id="detailCitizenName">-</div>
+                            </div>
+                            <div class="dossier-meta-card">
+                                <span class="meta-label"><i class="fa-solid fa-signal"></i> Priority Level</span>
+                                <div class="meta-value" id="detailPriorityWrapper">
+                                    <span id="detailPriority" class="priority-pill priority-low"><span class="priority-indicator"></span>Low</span>
+                                </div>
+                            </div>
+                            <div class="dossier-meta-card full-span">
+                                <span class="meta-label"><i class="fa-solid fa-triangle-exclamation"></i> Hazard Category</span>
+                                <div class="meta-value category-highlight" id="detailCategory">-</div>
+                            </div>
+                            <div class="dossier-meta-card full-span">
+                                <span class="meta-label"><i class="fa-solid fa-location-dot"></i> District & Spatial Coordinates</span>
+                                <div class="meta-value location-highlight" id="detailLocation">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Damage Notes & Citizen Attached Evidence -->
+                    <div class="dossier-right-col">
+                        <!-- Field Notes Box -->
+                        <div class="dossier-block">
+                            <div class="dossier-section-title">
+                                <i class="fa-solid fa-message-lines" style="color: var(--accent-amber);"></i> Field Notes & Damage Assessment
+                            </div>
+                            <div class="notes-box" id="detailDescription">No detailed notes submitted by citizen.</div>
+                        </div>
+
+                        <!-- Evidence Section -->
+                        <div class="dossier-block" id="detailEvidenceSection">
+                            <div class="dossier-section-title">
+                                <i class="fa-solid fa-camera" style="color: var(--accent-cyan);"></i> Citizen Attached Field Photo / Evidence
+                            </div>
+                            <div id="detailEvidenceContainer">
+                                <div class="no-evidence-box">
+                                    <i class="fa-solid fa-circle-info"></i> No field photographic evidence attached to this report.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sticky Fixed Modal Footer -->
+            <div class="dossier-modal-footer">
+                <div class="footer-left-controls">
+                    <span class="status-change-label"><i class="fa-solid fa-sliders"></i> Update Status:</span>
+                    <select id="modalStatusSelect" class="status-select footer-status-select">
+                        <option value="Pending Review">Pending Review</option>
+                        <option value="Verified by Staff">Verified by Staff</option>
+                        <option value="Rescue Dispatched">Rescue Dispatched</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Discarded">Discarded</option>
+                    </select>
+                    <button type="button" class="btn-auth btn-signup footer-btn-save" onclick="saveModalStatusUpdate()">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Status
+                    </button>
+                </div>
+
+                <div class="footer-right-controls">
+                    <button type="button" class="btn-modal-delete" onclick="confirmDeleteIncident(activeSelectedIncident?.id)" title="Permanently delete this incident record">
+                        <i class="fa-solid fa-trash-can"></i> Delete Incident
+                    </button>
+                    <button type="button" class="btn-auth btn-login footer-btn-close" onclick="closeDetailModal()">
+                        <i class="fa-solid fa-xmark"></i> Close Dossier
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteConfirmModal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 11000; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 20px;">
+        <div class="modal-card"
+            style="max-width: 450px; width: 100%; text-align: center; background: #0f172a; border: 1px solid rgba(251,113,133,0.3); border-radius: 12px; padding: 25px;">
+            <div
+                style="width: 60px; height: 60px; background: rgba(251,113,133,0.15); border: 1px solid rgba(251,113,133,0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; color: var(--accent-rose);"></i>
+            </div>
+            <h3 style="color: #fff; font-size: 1.25rem; margin-bottom: 8px;">Delete Incident Record?</h3>
+            <p id="deleteConfirmText"
+                style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 22px; line-height: 1.5;">
+                Are you sure you want to permanently delete this incident record? This will purge the incident from
+                national emergency databases.
+            </p>
+            <div style="display: flex; justify-content: center; gap: 12px;">
+                <button type="button" class="btn-auth btn-login" onclick="closeDeleteConfirmModal()"
+                    style="padding: 9px 18px;">Cancel</button>
+                <button type="button" class="btn-modal-delete" id="btnExecuteDelete" onclick="executeDeleteIncident()"
+                    style="padding: 9px 18px; font-weight: 600;">
+                    <i class="fa-solid fa-trash-can"></i> Yes, Delete Record
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Fullscreen Lightbox Modal -->
+    <div class="modal-overlay" id="adminLightboxModal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 20px;">
+        <div class="modal-card"
+            style="background: #0f172a; border: 1px solid var(--border-glass); border-radius: 12px; max-width: 800px; width: 100%; padding: 25px; position: relative; max-height: 90vh; overflow-y: auto;">
+            <button class="modal-close-btn" onclick="closeAdminLightbox()"
+                style="position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: #fff; font-size: 1.4rem; cursor: pointer;">&times;</button>
+            <h3
+                style="color: #fff; font-size: 1.15rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-camera" style="color: var(--accent-cyan);"></i> <span
+                    id="adminLightboxTitle">Disaster Field Evidence Inspection</span>
+            </h3>
+            <div
+                style="border-radius: 8px; overflow: hidden; background: #000; border: 1px solid var(--border-glass); text-align: center; margin-bottom: 15px; max-height: 500px; display: flex; align-items: center; justify-content: center;">
+                <img id="adminLightboxImg" src="" alt="Evidence Full Resolution"
+                    style="max-width: 100%; max-height: 500px; object-fit: contain;">
+            </div>
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <a id="adminLightboxDownloadBtn" href="#" target="_blank" download="incident_evidence.jpg"
+                    class="btn-loc-action"
+                    style="background: rgba(34,211,238,0.2); color: var(--accent-cyan); text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-download"></i> Open Original / Download
+                </a>
+                <button type="button" class="btn-loc-action" onclick="closeAdminLightbox()"
+                    style="padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--border-glass); cursor: pointer;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Pakistan Flood & Disaster Intelligence Platform &bull; Secure National Command Infrastructure</p>
+    </footer>
+
+    <!-- Global Toast Function -->
+    <script>
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            let icon = 'fa-circle-info';
+            if (type === 'success') icon = 'fa-circle-check';
+            if (type === 'error') icon = 'fa-triangle-exclamation';
+
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function openAuthModal(mode = 'admin-login') {
+            const modal = document.getElementById('authModal');
+            const content = document.getElementById('modalContent');
+            modal.style.display = 'flex';
+
+            if (mode === 'admin-login') {
+                content.innerHTML = `
+                    <h3><i class="fa-solid fa-shield-halved" style="color: var(--accent-amber);"></i> Staff / Admin Command Login</h3>
+                    <p>Enter administrative credentials to access real-time emergency dispatch and incident review.</p>
+                    <form id="adminLoginForm" onsubmit="handleAdminLoginSubmit(event)">
+                        <div class="form-group">
+                            <label>Admin / Staff Email</label>
+                            <input type="email" id="modalAdminEmail" placeholder="admin@domain.com" required style="width: 100%; padding: 12px; background: rgba(15,23,42,0.8); border: 1px solid var(--border-glass); border-radius: 8px; color: white; margin-top: 6px;">
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label>Password</label>
+                            <input type="password" id="modalAdminPassword" placeholder="••••••••••••" required style="width: 100%; padding: 12px; background: rgba(15,23,42,0.8); border: 1px solid var(--border-glass); border-radius: 8px; color: white; margin-top: 6px;">
+                        </div>
+                        <button type="submit" class="btn-auth btn-signup" style="width: 100%; padding: 12px; margin-top: 20px;">Sign In to Staff Console</button>
+                    </form>
+                    <div style="display: flex; flex-direction: column; gap: 8px; text-align: center; margin-top: 16px;">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+                            Need to register a staff account? <a href="#" onclick="openAuthModal('admin-register')" style="color: var(--accent-amber); text-decoration: underline;">Register Admin Account</a>
+                        </p>
+                        <p style="font-size: 0.82rem; margin: 0;">
+                            <a href="#" onclick="closeAuthModal()" style="color: var(--accent-cyan); text-decoration: none; font-weight: 500;">
+                                <i class="fa-solid fa-eye" style="margin-right: 4px;"></i> Preview Command Feed as Demo Admin
+                            </a>
+                        </p>
+                    </div>
+                `;
+            } else if (mode === 'admin-register') {
+                content.innerHTML = `
+                    <h3><i class="fa-solid fa-user-shield" style="color: var(--accent-amber);"></i> Register Staff / Admin Account</h3>
+                    <p>Create credentials for official command portal access. Any valid email can be registered.</p>
+                    <form id="adminSignupForm" onsubmit="handleAdminRegisterSubmit(event)">
+                        <div class="form-group">
+                            <label>Full Official Name</label>
+                            <input type="text" id="modalRegName" placeholder="Staff Official" required style="width: 100%; padding: 12px; background: rgba(15,23,42,0.8); border: 1px solid var(--border-glass); border-radius: 8px; color: white; margin-top: 6px;">
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label>Email Address</label>
+                            <input type="email" id="modalRegEmail" placeholder="admin@domain.com" required style="width: 100%; padding: 12px; background: rgba(15,23,42,0.8); border: 1px solid var(--border-glass); border-radius: 8px; color: white; margin-top: 6px;">
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label>Password</label>
+                            <input type="password" id="modalRegPassword" placeholder="••••••••••••" required style="width: 100%; padding: 12px; background: rgba(15,23,42,0.8); border: 1px solid var(--border-glass); border-radius: 8px; color: white; margin-top: 6px;">
+                        </div>
+                        <button type="submit" class="btn-auth btn-signup" style="width: 100%; padding: 12px; margin-top: 20px;">Create Admin Account</button>
+                    </form>
+                    <p style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
+                        Already have credentials? <a href="#" onclick="openAuthModal('admin-login')" style="color: var(--accent-amber); text-decoration: underline;">Sign in</a>
+                    </p>
+                `;
+            }
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        window.openAdminLightbox = function (src, title = 'Disaster Incident Field Evidence') {
+            const imgElem = document.getElementById('adminLightboxImg');
+            const titleElem = document.getElementById('adminLightboxTitle');
+            const dBtn = document.getElementById('adminLightboxDownloadBtn');
+
+            imgElem.src = src;
+            titleElem.innerText = title;
+            dBtn.href = src;
+
+            document.getElementById('adminLightboxModal').style.display = 'flex';
+        };
+
+        window.closeAdminLightbox = function () {
+            document.getElementById('adminLightboxModal').style.display = 'none';
+        };
+    </script>
+
+    <!-- Supabase Core Engine & Admin Dashboard Logic -->
+    <script type="module">
+        import { supabase } from './js/supabaseClient.js';
+
+        let allComplaints = [];
+        let activeAdminUser = null;
+        let activeSelectedIncident = null;
+        let realtimeSubscription = null;
+
+        window.logoutAdmin = async function () {
+            await supabase.auth.signOut();
+            showToast("Admin session closed.", "info");
+            setTimeout(() => {
+                window.location.href = "index.html";
+            }, 800);
+        };
+
+        window.handleAdminLoginSubmit = async function (e) {
+            e.preventDefault();
+            const email = document.getElementById('modalAdminEmail').value;
+            const password = document.getElementById('modalAdminPassword').value;
+
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                showToast('Login Failed: ' + error.message, 'error');
+            } else {
+                showToast('Authenticated successfully as Admin!', 'success');
+                closeAuthModal();
+                initAdminDashboard();
+            }
+        };
+
+        window.handleAdminRegisterSubmit = async function (e) {
+            e.preventDefault();
+            const fullName = document.getElementById('modalRegName').value;
+            const email = document.getElementById('modalRegEmail').value;
+            const password = document.getElementById('modalRegPassword').value;
+
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: { full_name: fullName, role: 'admin' }
+                }
+            });
+
+            if (error) {
+                showToast('Registration Error: ' + error.message, 'error');
+            } else {
+                if (data.user) {
+                    try {
+                        await supabase.from('profiles').upsert([
+                            { id: data.user.id, full_name: fullName, role: 'admin' }
+                        ]);
+                    } catch (pErr) {
+                        console.warn('Profile upsert note:', pErr);
+                    }
+                }
+                showToast('Admin account registered! Initializing command center...', 'success');
+                closeAuthModal();
+                initAdminDashboard();
+            }
+        };
+
+        async function initAdminDashboard() {
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+            if (!sessionError && session && session.user) {
+                activeAdminUser = session.user;
+                const fullName = activeAdminUser.user_metadata?.full_name || activeAdminUser.email.split('@')[0];
+                const email = activeAdminUser.email;
+
+                // Render Admin details in header badge
+                document.getElementById('adminDisplayName').innerText = fullName;
+                document.getElementById('adminDisplayEmail').innerText = email;
+                const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                document.getElementById('adminAvatar').innerText = initials || 'AD';
+            } else {
+                // If not authenticated, open login modal smoothly
+                openAuthModal('admin-login');
+                showToast('Please sign in with admin credentials or preview feed as Demo Admin.', 'info');
+            }
+
+            // Always fetch and render Complaints feed so table is immediately active
+            await fetchAdminComplaintsFeed();
+
+            // Setup Real-Time Listener for newly filed complaints from citizen.html
+            setupRealtimeSubscription();
+        }
+
+        // Helper to format ISO timestamp into Day of Week, Date, and 12-hour Time
+        function formatDateTime(isoStr) {
+            if (!isoStr) return { dayDate: 'Today', time: 'Just Now', full: 'Just Now', relative: 'Just Now' };
+            try {
+                const d = new Date(isoStr);
+                if (isNaN(d.getTime())) return { dayDate: isoStr, time: '', full: isoStr, relative: '' };
+
+                const dayOfWeek = d.toLocaleDateString('en-US', { weekday: 'short' });
+                const datePart = d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+                const timePart = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+
+                const now = new Date();
+                const diffMs = now - d;
+                let relative = 'Just now';
+                if (diffMs > 0) {
+                    const diffSec = Math.floor(diffMs / 1000);
+                    const diffMin = Math.floor(diffSec / 60);
+                    const diffHr = Math.floor(diffMin / 60);
+                    const diffDays = Math.floor(diffHr / 24);
+
+                    if (diffDays > 0) relative = `${diffDays}d ago`;
+                    else if (diffHr > 0) relative = `${diffHr}h ago`;
+                    else if (diffMin > 0) relative = `${diffMin}m ago`;
+                    else relative = 'Just now';
+                }
+
+                return {
+                    dayOfWeek,
+                    datePart,
+                    timePart,
+                    relative,
+                    dayDate: `${dayOfWeek}, ${datePart}`,
+                    full: `${dayOfWeek}, ${datePart} • ${timePart}`
+                };
+            } catch (e) {
+                return { dayDate: isoStr, time: '', full: isoStr, relative: '' };
+            }
+        }
+
+        function getCategoryIcon(cat) {
+            if (!cat) return 'fa-solid fa-triangle-exclamation';
+            const c = cat.toLowerCase();
+            if (c.includes('flood') || c.includes('river') || c.includes('inundat') || c.includes('water')) return 'fa-solid fa-water';
+            if (c.includes('landslide') || c.includes('debris') || c.includes('rock')) return 'fa-solid fa-mountain';
+            if (c.includes('earthquake') || c.includes('seismic') || c.includes('tremor') || c.includes('structural')) return 'fa-solid fa-house-crack';
+            if (c.includes('medical') || c.includes('casualty') || c.includes('rescue')) return 'fa-solid fa-truck-medical';
+            if (c.includes('shelter') || c.includes('relief') || c.includes('food') || c.includes('aid')) return 'fa-solid fa-hand-holding-heart';
+            if (c.includes('weather') || c.includes('storm') || c.includes('cyclone') || c.includes('rain')) return 'fa-solid fa-cloud-bolt';
+            return 'fa-solid fa-triangle-exclamation';
+        }
+
+        async function fetchAdminComplaintsFeed() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            if (refreshIcon) refreshIcon.classList.add('fa-spin');
+
+            let complaints = [];
+            const seenKeys = new Set();
+
+            function strVal(v) { return v ? v.toString() : ''; }
+
+            // 1. Fetch from Backend Proxy API Endpoint (SQLite local database)
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/complaints');
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.status === 'success' && Array.isArray(json.data)) {
+                        json.data.forEach(item => {
+                            const key = `${strVal(item.id)}_${item.category}_${item.location}_${(item.created_at || '').slice(0, 19)}`;
+                            if (!seenKeys.has(key)) {
+                                seenKeys.add(key);
+                                complaints.push(item);
+                            }
+                        });
+                    }
+                }
+            } catch (bErr) {
+                console.warn('[FDIP Admin] Backend complaints fetch fallback note:', bErr);
+            }
+
+            // 2. Query Supabase directly if available
+            try {
+                const { data, error } = await supabase
+                    .from('complaints')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (!error && data) {
+                    data.forEach(item => {
+                        const key = `${strVal(item.id)}_${item.category}_${item.location}_${(item.created_at || '').slice(0, 19)}`;
+                        if (!seenKeys.has(key)) {
+                            seenKeys.add(key);
+                            complaints.push(item);
+                        }
+                    });
+                } else if (error) {
+                    console.warn('[FDIP Admin] Direct complaints query note:', error.message);
+                }
+            } catch (err) {
+                console.warn('[FDIP Admin] Direct complaints fetch exception:', err);
+            }
+
+            // 3. Merge local cached reports for instant visibility
+            try {
+                const localStr = localStorage.getItem('fdip_citizen_complaints');
+                if (localStr) {
+                    const localList = JSON.parse(localStr);
+                    localList.forEach(lc => {
+                        const key = `${strVal(lc.id)}_${lc.category}_${lc.location}_${(lc.created_at || '').slice(0, 19)}`;
+                        if (!seenKeys.has(key)) {
+                            seenKeys.add(key);
+                            complaints.push(lc);
+                        }
+                    });
+                }
+            } catch (lErr) {
+                console.warn('[FDIP Admin] Local complaints cache read notice:', lErr);
+            }
+
+            // 4. Default realistic disaster reports if feed is empty initially
+            if (complaints.length === 0) {
+                const sampleReports = [
+                    {
+                        id: 1042,
+                        citizen_name: 'Muhammad Asif',
+                        category: 'Riverine Flooding',
+                        district: 'Nowshera, Khyber Pakhtunkhwa',
+                        location: '34.0151°N, 71.9747°E (Kabul River Bank)',
+                        priority: 'High',
+                        status: 'Pending Review',
+                        description: 'Rapidly rising water levels in Kabul River upstream. Embankment near main bridge is showing signs of seepage and overflow risk.',
+                        created_at: new Date(Date.now() - 15 * 60000).toISOString()
+                    },
+                    {
+                        id: 1041,
+                        citizen_name: 'Zainab Bibi',
+                        category: 'Flash Flood',
+                        district: 'Swat, Khyber Pakhtunkhwa',
+                        location: '35.2227°N, 72.4258°E (Madyan Valley)',
+                        priority: 'High',
+                        status: 'Rescue Dispatched',
+                        description: 'Sudden cloudburst caused intense flash flooding through residential nullah. 4 homes inundated.',
+                        created_at: new Date(Date.now() - 45 * 60000).toISOString()
+                    },
+                    {
+                        id: 1040,
+                        citizen_name: 'Tariq Mehmood',
+                        category: 'Breached Embankment',
+                        district: 'Dadu, Sindh',
+                        location: '26.7341°N, 67.7795°E (MNV Drain Sector 4)',
+                        priority: 'High',
+                        status: 'Verified by Staff',
+                        description: 'Secondary dyke breach reported near village agricultural lands. Heavy water inflow advancing toward main bypass.',
+                        created_at: new Date(Date.now() - 120 * 60000).toISOString()
+                    },
+                    {
+                        id: 1039,
+                        citizen_name: 'Kamran Ali',
+                        category: 'Urban Inundation',
+                        district: 'Karachi Central, Sindh',
+                        location: '24.9312°N, 67.0374°E (Gujjar Nullah Crossing)',
+                        priority: 'Medium',
+                        status: 'Pending Review',
+                        description: 'Severe urban storm runoff blocking arterial road underpass. Water stagnation at 3.5 feet depth.',
+                        created_at: new Date(Date.now() - 210 * 60000).toISOString()
+                    },
+                    {
+                        id: 1038,
+                        citizen_name: 'Bashir Ahmed',
+                        category: 'Landslide & Debris Flow',
+                        district: 'Murree, Punjab',
+                        location: '33.9070°N, 73.3943°E (Rawalpindi-Murree Expressway KM 42)',
+                        priority: 'Medium',
+                        status: 'Resolved',
+                        description: 'Mudslide and boulder debris partially blocked northbound lane following persistent monsoon rainfall.',
+                        created_at: new Date(Date.now() - 360 * 60000).toISOString()
+                    }
+                ];
+                complaints = sampleReports;
+            }
+
+            // Sort all complaints newest-first
+            complaints.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+            allComplaints = complaints;
+            applyFilters();
+
+            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+        }
+
+        window.refreshAdminData = async function () {
+            showToast('Refreshing citizen incidents queue...', 'info');
+            await fetchAdminComplaintsFeed();
+        };
+
+        function renderTableAndStats(complaintsList) {
+            // Update stats dynamically from allComplaints (the master list)
+            const pendingCount = allComplaints.filter(c => c.status === 'Pending Review' || c.status === 'Pending').length;
+            const highPriorityCount = allComplaints.filter(c => c.priority === 'High').length;
+            const resolvedCount = allComplaints.filter(c => c.status === 'Resolved' || c.status === 'Rescue Dispatched' || c.status === 'Verified by Staff' || c.status === 'Verified').length;
+            const totalCount = allComplaints.length;
+
+            const statPending = document.getElementById('statPending');
+            const statHigh = document.getElementById('statHigh');
+            const statResolved = document.getElementById('statResolved');
+            const statTotal = document.getElementById('statTotal');
+            const feedCountBadge = document.getElementById('feedCountBadge');
+
+            if (statPending) statPending.innerText = pendingCount;
+            if (statHigh) statHigh.innerText = highPriorityCount;
+            if (statResolved) statResolved.innerText = resolvedCount;
+            if (statTotal) statTotal.innerText = totalCount;
+            if (feedCountBadge) feedCountBadge.innerText = `${complaintsList.length} of ${totalCount} Incidents`;
+
+            const tableBody = document.querySelector('#masterTable tbody');
+            if (!tableBody) return;
+
+            tableBody.innerHTML = '';
+            if (complaintsList.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 40px;"><i class="fa-solid fa-filter" style="margin-right: 8px; color: var(--accent-amber);"></i> No incident records matching your filter criteria in the national queue.</td></tr>`;
+                return;
+            }
+
+            complaintsList.forEach((item) => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-id', item.id);
+                row.setAttribute('data-priority', item.priority || 'Low');
+                row.setAttribute('data-status', item.status || 'Pending Review');
+
+                let badgeClass = 'status-pending';
+                let statusIcon = 'fa-regular fa-hourglass-half';
+                const s = item.status || 'Pending Review';
+                if (s === 'Verified' || s === 'Verified by Staff') {
+                    badgeClass = 'status-verified';
+                    statusIcon = 'fa-solid fa-shield-check';
+                }
+                if (s === 'Rescue Dispatched') {
+                    badgeClass = 'status-dispatched';
+                    statusIcon = 'fa-solid fa-truck-medical';
+                }
+                if (s === 'Resolved') {
+                    badgeClass = 'status-resolved';
+                    statusIcon = 'fa-solid fa-circle-check';
+                }
+                if (s === 'Discarded') {
+                    badgeClass = 'status-discarded';
+                    statusIcon = 'fa-solid fa-ban';
+                }
+
+                let priorityClass = 'priority-low';
+                if (item.priority === 'High') priorityClass = 'priority-high';
+                if (item.priority === 'Medium') priorityClass = 'priority-medium';
+
+                // Check for attached evidence
+                let attachmentBadgeHtml = '';
+                if (item.description) {
+                    const attachMatch = item.description.match(/\[ATTACHMENT\]:\s*([^\s\n]+)/);
+                    if (attachMatch && attachMatch[1]) {
+                        const attachUrl = attachMatch[1];
+                        attachmentBadgeHtml = `
+                            <span class="attachment-pill" onclick="openAdminLightbox('${attachUrl}', '${item.category || 'Incident Evidence'}')" title="Click to view full attached photo evidence">
+                                <i class="fa-solid fa-camera"></i> Photo Attached
+                            </span>
+                        `;
+                    }
+                }
+
+                const shortId = item.id ? item.id.toString().slice(0, 4) : 'FD';
+                const dt = formatDateTime(item.created_at);
+                const reporterName = item.citizen_name || 'Citizen User';
+                const reporterInitials = reporterName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'CZ';
+                const catIcon = getCategoryIcon(item.category);
+                const fullDistrict = item.district || item.location || 'Pakistan';
+                const cleanDistrict = fullDistrict.split(',')[0].trim();
+                const subLocation = item.location && item.location !== item.district ? item.location : (fullDistrict.includes(',') ? fullDistrict.split(',').slice(1).join(',').trim() : 'Location logged');
+
+                row.innerHTML = `
+                    <td class="col-ticket">
+                        <div class="ticket-id-tag" title="#FDIP-${shortId}">#FDIP-${shortId}</div>
+                    </td>
+                    <td class="col-datetime">
+                        <div class="date-primary" title="${dt.dayDate}">
+                            <i class="fa-regular fa-calendar-days"></i>
+                            <span>${dt.dayDate}</span>
+                        </div>
+                        <div class="time-secondary" title="${dt.timePart} (${dt.relative})">
+                            <i class="fa-regular fa-clock"></i>
+                            <span>${dt.timePart}</span>
+                            <span class="rel-time-pill">${dt.relative}</span>
+                        </div>
+                    </td>
+                    <td class="col-citizen">
+                        <div class="citizen-cell">
+                            <div class="citizen-avatar-sm">${reporterInitials}</div>
+                            <div class="citizen-info">
+                                <div class="citizen-name" title="${reporterName}">${reporterName}</div>
+                                <div class="citizen-tag"><i class="fa-solid fa-user-check" style="color: var(--accent-cyan); font-size: 0.58rem;"></i> Citizen</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="col-category">
+                        <div class="category-pill-wrap">
+                            <span class="category-name" title="${item.category || 'General Hazard'}"><i class="${catIcon}"></i> ${item.category || 'General Hazard'}</span>
+                            ${attachmentBadgeHtml}
+                        </div>
+                    </td>
+                    <td class="col-location">
+                        <div class="location-primary" title="${fullDistrict}">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span>${cleanDistrict}</span>
+                        </div>
+                        <div class="location-coords" title="${item.location || fullDistrict}">${subLocation}</div>
+                    </td>
+                    <td class="col-priority">
+                        <span class="priority-pill ${priorityClass}" title="Priority: ${item.priority || 'Low'}">
+                            <span class="priority-indicator"></span>
+                            ${item.priority || 'Low'}
+                        </span>
+                    </td>
+                    <td class="col-status">
+                        <span class="status-badge ${badgeClass}" title="Status: ${s}">
+                            <i class="${statusIcon}"></i>
+                            ${s}
+                        </span>
+                    </td>
+                    <td class="col-actions">
+                        <div class="action-buttons-group">
+                            <select class="status-select row-status-select" data-id="${item.id}" title="Change status">
+                                <option value="Pending Review" ${s === 'Pending Review' ? 'selected' : ''}>Pending</option>
+                                <option value="Verified by Staff" ${(s === 'Verified by Staff' || s === 'Verified') ? 'selected' : ''}>Verify</option>
+                                <option value="Rescue Dispatched" ${s === 'Rescue Dispatched' ? 'selected' : ''}>Dispatch</option>
+                                <option value="Resolved" ${s === 'Resolved' ? 'selected' : ''}>Resolve</option>
+                                <option value="Discarded" ${s === 'Discarded' ? 'selected' : ''}>Discard</option>
+                            </select>
+                            <button class="btn-view-notes" onclick="inspectIncident('${item.id}')" title="Inspect Dossier">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button class="btn-action-delete" onclick="confirmDeleteIncident('${item.id}')" title="Delete Incident">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // Attach inline status change listeners
+            document.querySelectorAll('.row-status-select').forEach(select => {
+                select.addEventListener('change', async (e) => {
+                    const newStatus = e.target.value;
+                    const recordId = e.target.getAttribute('data-id');
+                    await updateComplaintStatus(recordId, newStatus);
+                });
+            });
+        }
+
+        async function updateComplaintStatus(recordId, newStatus) {
+            let updateSuccess = false;
+
+            // 1. Backend Proxy API Endpoint (updates local SQLite database)
+            try {
+                const res = await fetch(`http://127.0.0.1:5000/api/complaints/${recordId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.status === 'success') {
+                        updateSuccess = true;
+                    }
+                }
+            } catch (bErr) {
+                console.warn('[FDIP Admin] Backend status update note:', bErr);
+            }
+
+            // 2. Supabase direct update
+            try {
+                const { error } = await supabase
+                    .from('complaints')
+                    .update({ status: newStatus })
+                    .eq('id', recordId);
+
+                if (!error) {
+                    updateSuccess = true;
+                } else {
+                    console.warn('[FDIP Admin] Direct Supabase status update note:', error.message);
+                }
+            } catch (err) {
+                console.warn('[FDIP Admin] Status update exception:', err);
+            }
+
+            // 3. Update localStorage cache if present
+            try {
+                const localStr = localStorage.getItem('fdip_citizen_complaints');
+                if (localStr) {
+                    const localList = JSON.parse(localStr);
+                    let localUpdated = false;
+                    localList.forEach(item => {
+                        if (item.id && item.id.toString() === recordId.toString()) {
+                            item.status = newStatus;
+                            localUpdated = true;
+                        }
+                    });
+                    if (localUpdated) {
+                        localStorage.setItem('fdip_citizen_complaints', JSON.stringify(localList));
+                        updateSuccess = true;
+                    }
+                }
+            } catch (lErr) {
+                console.warn('[FDIP Admin] Local storage status sync note:', lErr);
+            }
+
+            if (updateSuccess) {
+                showToast(`Incident status updated to: ${newStatus}`, 'success');
+                // Update locally
+                const found = allComplaints.find(c => c.id && c.id.toString() === recordId.toString());
+                if (found) found.status = newStatus;
+                applyFilters();
+            } else {
+                showToast('Failed to update status on server.', 'error');
+            }
+        }
+
+        // Incident Deletion System
+        let pendingDeleteRecordId = null;
+
+        window.confirmDeleteIncident = function (recordId) {
+            if (!recordId) return;
+            pendingDeleteRecordId = recordId;
+            const item = allComplaints.find(c => c.id && c.id.toString() === recordId.toString());
+            const shortId = item?.id ? item.id.toString().slice(0, 4) : recordId.toString().slice(0, 4);
+            const category = item?.category || 'Incident';
+
+            document.getElementById('deleteConfirmText').innerText =
+                `Are you sure you want to permanently delete ticket #FDIP-${shortId} (${category})? This will purge the record from national databases and cannot be undone.`;
+
+            const modal = document.getElementById('deleteConfirmModal');
+            if (modal) modal.style.display = 'flex';
+        };
+
+        window.closeDeleteConfirmModal = function () {
+            pendingDeleteRecordId = null;
+            const modal = document.getElementById('deleteConfirmModal');
+            if (modal) modal.style.display = 'none';
+        };
+
+        window.executeDeleteIncident = async function () {
+            if (!pendingDeleteRecordId) return;
+            const idToDelete = pendingDeleteRecordId;
+            closeDeleteConfirmModal();
+            await deleteComplaint(idToDelete);
+        };
+
+        async function deleteComplaint(recordId) {
+            if (!recordId) return;
+            let deleteSuccess = false;
+
+            showToast(`Purging incident #FDIP-${recordId.toString().slice(0, 4)}...`, 'info');
+
+            // 1. Delete from Backend Proxy API (SQLite)
+            try {
+                const res = await fetch(`http://127.0.0.1:5000/api/complaints/${recordId}`, {
+                    method: 'DELETE'
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.status === 'success') {
+                        deleteSuccess = true;
+                    }
+                }
+            } catch (bErr) {
+                console.warn('[FDIP Admin] Backend delete note:', bErr);
+            }
+
+            // 2. Delete from Supabase
+            try {
+                const { error } = await supabase
+                    .from('complaints')
+                    .delete()
+                    .eq('id', recordId);
+
+                if (!error) {
+                    deleteSuccess = true;
+                } else {
+                    console.warn('[FDIP Admin] Supabase delete note:', error.message);
+                }
+            } catch (sErr) {
+                console.warn('[FDIP Admin] Supabase delete exception:', sErr);
+            }
+
+            // 3. Remove from localStorage
+            try {
+                const localStr = localStorage.getItem('fdip_citizen_complaints');
+                if (localStr) {
+                    const localList = JSON.parse(localStr);
+                    const updated = localList.filter(c => c.id && c.id.toString() !== recordId.toString());
+                    localStorage.setItem('fdip_citizen_complaints', JSON.stringify(updated));
+                    deleteSuccess = true;
+                }
+            } catch (lErr) {
+                console.warn('[FDIP Admin] Local storage delete note:', lErr);
+            }
+
+            if (deleteSuccess) {
+                // Remove from local memory
+                allComplaints = allComplaints.filter(c => c.id && c.id.toString() !== recordId.toString());
+                closeDetailModal();
+                applyFilters();
+                showToast(`Incident #FDIP-${recordId.toString().slice(0, 4)} deleted successfully!`, 'success');
+            } else {
+                showToast('Failed to delete incident record from server.', 'error');
+            }
+        }
+
+        window.inspectIncident = function (recordId) {
+            const item = allComplaints.find(c => c.id.toString() === recordId.toString());
+            if (!item) return;
+
+            activeSelectedIncident = item;
+            const dt = formatDateTime(item.created_at);
+
+            document.getElementById('detailTicketId').innerText = `#FDIP-${item.id ? item.id.toString().slice(0, 4) : '0000'} (Full ID: ${item.id})`;
+            document.getElementById('detailDate').innerText = `${dt.full} • ${dt.relative}`;
+            document.getElementById('detailCitizenName').innerText = item.citizen_name || 'Citizen User';
+
+            const prio = item.priority || 'Low';
+            let prioClass = 'priority-low';
+            if (prio === 'High') prioClass = 'priority-high';
+            else if (prio === 'Medium') prioClass = 'priority-medium';
+
+            const prioWrapper = document.getElementById('detailPriorityWrapper');
+            if (prioWrapper) {
+                prioWrapper.innerHTML = `
+                    <span class="priority-pill ${prioClass}">
+                        <span class="priority-indicator"></span>
+                        ${prio} Priority
+                    </span>
+                `;
+            }
+
+            document.getElementById('detailCategory').innerHTML = `<i class="${getCategoryIcon(item.category)}" style="color: var(--accent-cyan); margin-right: 6px;"></i> ${item.category || 'General Hazard'}`;
+            document.getElementById('detailLocation').innerHTML = `
+                <div style="font-weight: 600; color: #fff;">${item.district || 'Unassigned District'}</div>
+                <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px; font-family: monospace;">${item.location || 'No Coordinates Logged'}</div>
+            `;
+
+            // Status Badge in Header
+            const statusBadgeElem = document.getElementById('detailStatusBadge');
+            const s = item.status || 'Pending Review';
+            let badgeClass = 'status-pending';
+            let statusIcon = 'fa-regular fa-hourglass-half';
+            if (s === 'Verified' || s === 'Verified by Staff') {
+                badgeClass = 'status-verified';
+                statusIcon = 'fa-solid fa-shield-check';
+            } else if (s === 'Rescue Dispatched') {
+                badgeClass = 'status-dispatched';
+                statusIcon = 'fa-solid fa-truck-medical';
+            } else if (s === 'Resolved') {
+                badgeClass = 'status-resolved';
+                statusIcon = 'fa-solid fa-circle-check';
+            } else if (s === 'Discarded') {
+                badgeClass = 'status-discarded';
+                statusIcon = 'fa-solid fa-ban';
+            }
+            if (statusBadgeElem) {
+                statusBadgeElem.className = `status-badge ${badgeClass}`;
+                statusBadgeElem.innerHTML = `<i class="${statusIcon}"></i> ${s}`;
+            }
+
+            // Subtitle
+            const subTitle = document.getElementById('modalTicketSubtitle');
+            if (subTitle) {
+                subTitle.innerText = `Reported on ${dt.dayDate} • Location: ${item.district ? item.district.split(',')[0] : 'Pakistan'}`;
+            }
+
+            // Clean description of attachment metadata tags
+            let cleanDesc = item.description || 'No detailed description or field notes submitted.';
+            let attachmentUrl = null;
+            let attachmentName = 'Evidence Photo';
+
+            if (item.description) {
+                const attachMatch = item.description.match(/\[ATTACHMENT\]:\s*([^\s\n]+)/);
+                if (attachMatch && attachMatch[1]) {
+                    attachmentUrl = attachMatch[1];
+                }
+                const nameMatch = item.description.match(/\[ATTACHMENT_NAME\]:\s*([^\n\r]+)/);
+                if (nameMatch && nameMatch[1]) {
+                    attachmentName = nameMatch[1].trim();
+                }
+
+                cleanDesc = cleanDesc.replace(/\[ATTACHMENT\]:[\s\S]*?(?=\n\[|$)/g, '')
+                    .replace(/\[ATTACHMENT_NAME\]:[^\n\r]*/g, '')
+                    .trim();
+                if (!cleanDesc) cleanDesc = 'No additional text notes provided.';
+            }
+
+            document.getElementById('detailDescription').innerText = cleanDesc;
+
+            // Render evidence section
+            const evidenceContainer = document.getElementById('detailEvidenceContainer');
+            if (attachmentUrl) {
+                evidenceContainer.innerHTML = `
+                    <div class="evidence-dossier-card">
+                        <div class="evidence-thumb-wrapper" onclick="openAdminLightbox('${attachmentUrl}', '${item.category || 'Disaster'} Evidence')">
+                            <img src="${attachmentUrl}" alt="Field Evidence Preview">
+                        </div>
+                        <div class="evidence-actions-box">
+                            <div style="font-size: 0.85rem; font-weight: 600; color: #fff;">
+                                <i class="fa-solid fa-file-image" style="color: var(--accent-cyan); margin-right: 5px;"></i>${attachmentName}
+                            </div>
+                            <div style="font-size: 0.74rem; color: var(--accent-emerald); font-weight: 600;">
+                                <i class="fa-solid fa-circle-check"></i> Field Evidence Attached by Citizen
+                            </div>
+                            <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
+                                <button type="button" class="btn-loc-action" onclick="openAdminLightbox('${attachmentUrl}', '${item.category || 'Disaster'} Evidence')" style="padding: 5px 10px; font-size: 0.75rem; background: rgba(34,211,238,0.2); color: var(--accent-cyan); border-radius: 5px; border: 1px solid rgba(34,211,238,0.4); cursor: pointer;">
+                                    <i class="fa-solid fa-magnifying-glass-plus"></i> Enlarge Photo
+                                </button>
+                                <a href="${attachmentUrl}" target="_blank" download="${attachmentName}" class="btn-loc-action" style="padding: 5px 10px; font-size: 0.75rem; text-decoration: none; background: rgba(255,255,255,0.06); color: #cbd5e1; border-radius: 5px; border: 1px solid var(--border-glass); display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="fa-solid fa-download"></i> Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                evidenceContainer.innerHTML = `
+                    <div class="no-evidence-box">
+                        <i class="fa-solid fa-circle-info" style="margin-right: 6px; color: var(--accent-cyan);"></i> No field evidence photo or document was attached to this ticket.
+                    </div>
+                `;
+            }
+
+            const modalSelect = document.getElementById('modalStatusSelect');
+            if (modalSelect) modalSelect.value = item.status || 'Pending Review';
+
+            document.getElementById('detailModal').style.display = 'flex';
+        };
+
+        window.saveModalStatusUpdate = async function () {
+            if (!activeSelectedIncident) return;
+            const newStatus = document.getElementById('modalStatusSelect').value;
+            await updateComplaintStatus(activeSelectedIncident.id, newStatus);
+            closeDetailModal();
+        };
+
+        window.applyFilters = function () {
+            const priorityVal = document.getElementById('priorityFilter').value;
+            const statusVal = document.getElementById('statusFilter').value;
+            const query = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+
+            const filtered = allComplaints.filter(item => {
+                // Priority filter
+                if (priorityVal !== 'all' && item.priority !== priorityVal) return false;
+
+                // Status filter
+                if (statusVal !== 'all') {
+                    if (statusVal === 'Pending' && !['Pending Review', 'Pending'].includes(item.status)) return false;
+                    if (statusVal === 'Verified' && !['Verified by Staff', 'Verified'].includes(item.status)) return false;
+                    if (statusVal === 'Dispatched' && item.status !== 'Rescue Dispatched') return false;
+                    if (statusVal === 'Resolved' && item.status !== 'Resolved') return false;
+                    if (statusVal === 'Discarded' && item.status !== 'Discarded') return false;
+                }
+
+                // Text search
+                if (query) {
+                    const ticketIdStr = `#fdip-${item.id.toString().slice(0, 4)} ${item.id}`;
+                    const citizenStr = (item.citizen_name || '').toLowerCase();
+                    const categoryStr = (item.category || '').toLowerCase();
+                    const locationStr = (item.district || item.location || '').toLowerCase();
+                    const notesStr = (item.description || '').toLowerCase();
+
+                    const combined = `${ticketIdStr} ${citizenStr} ${categoryStr} ${locationStr} ${notesStr}`;
+                    if (!combined.includes(query)) return false;
+                }
+
+                return true;
+            });
+
+            renderTableAndStats(filtered);
+        };
+
+        // Real-Time Supabase channel for receiving complaints from citizen.html live
+        function setupRealtimeSubscription() {
+            if (realtimeSubscription) {
+                supabase.removeChannel(realtimeSubscription);
+            }
+
+            realtimeSubscription = supabase
+                .channel('admin-complaints-realtime')
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'complaints' },
+                    (payload) => {
+                        console.log('[FDIP Realtime] Complaints change detected:', payload);
+                        if (payload.eventType === 'INSERT') {
+                            showToast(`🚨 New Incident Reported: ${payload.new.category || 'Disaster Alert'} in ${payload.new.district || 'Pakistan'}`, 'error');
+                        }
+                        // Refresh data smoothly
+                        fetchAdminComplaintsFeed();
+                    }
+                )
+                .subscribe((status) => {
+                    const statusElem = document.getElementById('realtimeStatus');
+                    if (statusElem) {
+                        if (status === 'SUBSCRIBED') {
+                            statusElem.innerText = 'LIVE PIPELINE CONNECTED';
+                        }
+                    }
+                });
+
+            // Polling interval fallback every 5 seconds to ensure newly added records appear instantly
+            setInterval(() => {
+                fetchAdminComplaintsFeed();
+            }, 5000);
+        }
+
+        // Initialize dashboard when DOM loads
+        window.addEventListener('DOMContentLoaded', () => {
+            initAdminDashboard();
+        });
+    </script>
+
+</body>
+
+</html>
